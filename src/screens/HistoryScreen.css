@@ -1,6 +1,61 @@
 .history-screen {
-  padding: 20px;
   padding-bottom: 80px;
+}
+
+.date-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: white;
+  border-bottom: 1px solid #eee;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.date-nav button {
+  background: none;
+  border: 1.5px solid #d4d8d4;
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 16px;
+  color: #444;
+  transition: all 0.2s;
+}
+
+.date-nav button:hover:not(:disabled) {
+  background: #f0f2f0;
+  border-color: #b8bdb8;
+}
+
+.date-nav button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.date-label {
+  font-weight: 600;
+  font-size: 16px;
+  color: #333;
+}
+
+.day-summary {
+  display: flex;
+  gap: 20px;
+  padding: 12px 20px;
+  background: #f9f9f9;
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+  border-bottom: 1px solid #eee;
+}
+
+.empty-day {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
 }
 
 .history-screen h2 {
@@ -70,6 +125,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  padding: 20px;
 }
 
 .date-header {
@@ -123,11 +179,25 @@
   min-width: 0;
 }
 
+.meal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
 .meal-details h4 {
-  margin: 0 0 4px 0;
+  margin: 0;
   font-size: 16px;
   color: #2d2d2d;
   word-break: break-word;
+}
+
+.meal-time {
+  font-size: 12px;
+  color: #aaa;
+  white-space: nowrap;
 }
 
 .meal-portion {

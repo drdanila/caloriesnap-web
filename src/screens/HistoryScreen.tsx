@@ -1,8 +1,21 @@
+import { useState } from 'react'
 import { Meal } from '../services/mealService'
 import './HistoryScreen.css'
 
 export default function HistoryScreen({ meals }: { meals: Meal[] }) {
-  const groupedMeals = groupByDate(meals)
+  const [selectedDate, setSelectedDate] = useState(new Date())
+
+  const isToday = selectedDate.toDateString() === new Date().toDateString()
+
+  const dateLabel = isToday
+    ? 'Сегодня'
+    : selectedDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
+
+  const dayMeals = meals.filter(meal =>
+    new Date(meal.createdAt).toDateString() === selectedDate.toDateString()
+  )
+
+  const dayCalories = dayMeals.reduce((sum, m) => sum + m.calories, 0)
 
   if (meals.length === 0) {
     return (
@@ -16,38 +29,31 @@ export default function HistoryScreen({ meals }: { meals: Meal[] }) {
     )
   }
 
-  const stats = {
-    total: meals.length,
-    avgCalories: Math.round(
-      meals.reduce((sum, m) => sum + m.calories, 0) / meals.length
-    ),
-    totalCalories: meals.reduce((sum, m) => sum + m.calories, 0),
-  }
-
   return (
     <div className="history-screen">
-      <h2>Meal History</h2>
+      <div className="date-nav">
+        <button onClick={() => setSelectedDate(d => new Date(d.getTime() - 86400000))}>←</button>
+        <span className="date-label">{dateLabel}</span>
+        <button onClick={() => setSelectedDate(d => new Date(d.getTime() + 86400000))} disabled={isToday}>→</button>
+      </div>
 
-      <div className="stats-bar">
-        <div className="stat">
-          <span className="stat-label">Total Meals</span>
-          <span className="stat-value">{stats.total}</span>
-        </div>
-        <div className="stat">
-          <span className="stat-label">Total Calories</span>
-          <span className="stat-value">{stats.totalCalories}</span>
-        </div>
-        <div className="stat">
-          <span className="stat-label">Avg per Meal</span>
-          <span className="stat-value">{stats.avgCalories}</span>
-        </div>
+      <div className="day-summary">
+        <span>{dayCalories} kcal</span>
+        <span>{dayMeals.length} блюд</span>
       </div>
 
       <div className="meals-list">
-        {Object.entries(groupedMeals).map(([date, dayMeals]) => (
-          <div key={date}>
-            <h3 className="date-header">{date}</h3>
-            {dayMeals.map((meal) => (
+        {dayMeals.length === 0 ? (
+          <div className="empty-day">
+            <p>Нет блюд в этот день</p>
+          </div>
+        ) : (
+          dayMeals.map((meal) => {
+            const time = new Date(meal.createdAt).toLocaleTimeString('ru-RU', {
+              hour: '2-digit',
+              minute: '2-digit',
+            })
+            return (
               <div key={meal.id} className="meal-item">
                 <div className="meal-image">
                   {meal.imageUrl ? (
@@ -57,7 +63,10 @@ export default function HistoryScreen({ meals }: { meals: Meal[] }) {
                   )}
                 </div>
                 <div className="meal-details">
-                  <h4>{meal.dishName}</h4>
+                  <div className="meal-header">
+                    <h4>{meal.dishName}</h4>
+                    <span className="meal-time">{time}</span>
+                  </div>
                   <p className="meal-portion">{meal.portionSize}</p>
                   <p className="meal-macros">
                     P: {meal.protein}g | F: {meal.fat}g | C: {meal.carbs}g
@@ -79,40 +88,10 @@ export default function HistoryScreen({ meals }: { meals: Meal[] }) {
                   <span className="calories-unit">kcal</span>
                 </div>
               </div>
-            ))}
-          </div>
-        ))}
+            )
+          })
+        )}
       </div>
     </div>
   )
-}
-
-function groupByDate(meals: Meal[]): Record<string, Meal[]> {
-  const grouped: Record<string, Meal[]> = {}
-
-  meals.forEach((meal) => {
-    const date = new Date(meal.createdAt)
-    const today = new Date()
-    const yesterday = new Date(today)
-    yesterday.setDate(yesterday.getDate() - 1)
-
-    let dateStr: string
-    if (date.toDateString() === today.toDateString()) {
-      dateStr = 'Today'
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      dateStr = 'Yesterday'
-    } else {
-      dateStr = date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-      })
-    }
-
-    if (!grouped[dateStr]) {
-      grouped[dateStr] = []
-    }
-    grouped[dateStr].push(meal)
-  })
-
-  return grouped
 }

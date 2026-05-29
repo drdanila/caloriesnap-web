@@ -1,4 +1,4 @@
-import { db, storage } from '../config/firebase'
+import { db } from '../config/firebase'
 import {
   collection,
   query,
@@ -10,7 +10,6 @@ import {
   addDoc,
   serverTimestamp
 } from 'firebase/firestore'
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 
 export interface Meal {
   id: string
@@ -75,29 +74,11 @@ export async function fetchUserMeals(userId: string): Promise<Meal[]> {
   })) as Meal[]
 }
 
-export async function saveMeal(mealData: Omit<Meal, 'id' | 'createdAt'>, imageFile: File | null): Promise<string> {
+export async function saveMeal(mealData: Omit<Meal, 'id' | 'createdAt'>): Promise<string> {
   try {
-    let imageUrl: string | undefined
-
-    // Upload image to Firebase Storage if provided
-    if (imageFile) {
-      try {
-        const timestamp = Date.now()
-        const fileName = `${mealData.userId}/${timestamp}.jpg`
-        const storageRef = ref(storage, `meals/${fileName}`)
-
-        await uploadBytes(storageRef, imageFile)
-        imageUrl = await getDownloadURL(storageRef)
-      } catch (storageError: any) {
-        console.warn('Storage upload failed, saving meal without image:', storageError)
-        // Continue without image URL
-      }
-    }
-
     const mealsCollection = collection(db, 'meals')
     const docRef = await addDoc(mealsCollection, {
       ...mealData,
-      ...(imageUrl && { imageUrl }),
       createdAt: serverTimestamp()
     })
 

@@ -1,5 +1,7 @@
 const express = require('express');
 const Anthropic = require('@anthropic-ai/sdk');
+const admin = require('firebase-admin');
+const crypto = require('crypto');
 
 const app = express();
 app.use(express.json({ limit: '50mb' }));
@@ -7,6 +9,11 @@ app.use(express.json({ limit: '50mb' }));
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
+
+admin.initializeApp({
+  storageBucket: 'eatappmain-e7503.firebasestorage.app'
+});
+const bucket = admin.storage().bucket();
 
 app.post('/analyze', async (req, res) => {
   res.set('Access-Control-Allow-Origin', '*');
@@ -147,7 +154,27 @@ IMPORTANT: Respond in Russian language. All text fields (dishName, portionSize, 
     }
 
     console.log('Successfully parsed nutrition data:', nutritionData);
-    res.json(nutritionData);
+
+    // Upload image to Firebase Storage
+    let imageUrl;
+    try {
+      const token = crypto.randomUUID();
+      const timestamp = Date.now();
+      const fileName = `meals/${userId}/${timestamp}.jpg`;
+
+      await bucket.file(fileName).save(Buffer.from(imageBase64, 'base64'), {
+        metadata: {
+          contentType: mediaType || 'image/jpeg',
+          metadata: { firebaseStorageDownloadTokens: token }
+        }
+      });
+
+      imageUrl = `https://firebasestorage.googleapis.com/v0/b/eatappmain-e7503.firebasestorage.app/o/${encodeURIComponent(fileName)}?alt=media&token=${token}`;
+    } catch (uploadErr) {
+      console.warn('Image upload failed:', uploadErr.message);
+    }
+
+    res.json({ ...nutritionData, ...(imageUrl && { imageUrl }) });
 
   } catch (error) {
     console.error('Error analyzing meal:', error);

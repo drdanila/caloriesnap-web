@@ -45,11 +45,11 @@ export default function MainScreen({ user }: { user: User }) {
       setAnalyzing(false)
 
       try {
-        await saveMeal({ ...analysisResult, userId: user.uid }, file)
-        await loadMeals()
+        await saveMeal({ ...analysisResult, userId: user.uid })
       } catch (saveError) {
         console.warn('Failed to save meal:', saveError)
       }
+      await loadMeals()
     } catch (error: any) {
       console.error('Analysis error:', error)
       const errorMessage = error?.message || 'Не удалось анализировать блюдо. Попробуйте снова.'
