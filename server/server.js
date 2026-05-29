@@ -104,7 +104,7 @@ Return ONLY valid JSON (no markdown, no extra text) with these fields:
   "protein": number (in grams, consider all ingredients),
   "fat": number (in grams, include cooking oils),
   "carbs": number (in grams, all sources),
-  "fiber": number (in grams, if significant),
+  "fiber": number (in grams, estimate from ingredients; if unclear, use 0),
   "confidence": number (0-100, how confident in accuracy: 100=very clear/standard dish, 50=unclear/mixed items),
   "portionSize": "specific portion size (e.g., '250g', '1.5 cups', '150ml')",
   "ingredients": ["ingredient1", "ingredient2", ...],
@@ -157,6 +157,14 @@ IMPORTANT: Respond in Russian language. All text fields (dishName, portionSize, 
     }
 
     console.log('Successfully parsed nutrition data:', nutritionData);
+
+    // Normalize nutrition data - ensure all fields are present and valid
+    nutritionData.fiber = Math.max(0, nutritionData.fiber || 0);
+    nutritionData.protein = Math.max(0, nutritionData.protein || 0);
+    nutritionData.fat = Math.max(0, nutritionData.fat || 0);
+    nutritionData.carbs = Math.max(0, nutritionData.carbs || 0);
+    nutritionData.calories = Math.max(0, nutritionData.calories || 0);
+    nutritionData.confidence = Math.min(100, Math.max(0, nutritionData.confidence || 50));
 
     // Upload image to Firebase Storage
     let imageUrl;
