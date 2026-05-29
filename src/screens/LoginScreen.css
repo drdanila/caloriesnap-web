@@ -48,19 +48,20 @@
 .signin-button {
   width: 100%;
   padding: 14px;
-  background: linear-gradient(135deg, #a8d5ba 0%, #7cc9a8 100%);
+  background: linear-gradient(135deg, #2d8a5e 0%, #1e6b45 100%);
   color: white;
   border: none;
   border-radius: 10px;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: all 0.2s;
 }
 
 .signin-button:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 5px 20px rgba(168, 213, 186, 0.4);
+  background: linear-gradient(135deg, #267550 0%, #195a3a 100%);
+  box-shadow: 0 6px 20px rgba(45, 138, 94, 0.4);
 }
 
 .signin-button:disabled {

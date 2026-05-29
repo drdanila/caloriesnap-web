@@ -8,7 +8,9 @@ import {
   Query,
   DocumentData,
   addDoc,
-  serverTimestamp
+  serverTimestamp,
+  doc,
+  deleteDoc
 } from 'firebase/firestore'
 
 export interface Meal {
@@ -85,6 +87,16 @@ export async function saveMeal(mealData: Omit<Meal, 'id' | 'createdAt'>): Promis
     return docRef.id
   } catch (error: any) {
     console.error('Error saving meal:', error)
+    throw error
+  }
+}
+
+export async function deleteMeal(mealId: string): Promise<void> {
+  try {
+    const mealRef = doc(db, 'meals', mealId)
+    await deleteDoc(mealRef)
+  } catch (error: any) {
+    console.error('Error deleting meal:', error)
     throw error
   }
 }

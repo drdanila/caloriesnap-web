@@ -1,9 +1,11 @@
 import { useState } from 'react'
-import { Meal } from '../services/mealService'
+import { Meal, deleteMeal } from '../services/mealService'
+import { ResultCard } from '../components/ResultCard'
 import './HistoryScreen.css'
 
-export default function HistoryScreen({ meals }: { meals: Meal[] }) {
+export default function HistoryScreen({ meals, onMealDelete }: { meals: Meal[]; onMealDelete: (id: string) => Promise<void> }) {
   const [selectedDate, setSelectedDate] = useState(new Date())
+  const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null)
 
   const isToday = selectedDate.toDateString() === new Date().toDateString()
 
@@ -55,16 +57,26 @@ export default function HistoryScreen({ meals }: { meals: Meal[] }) {
             })
             return (
               <div key={meal.id} className="meal-item">
-                <div className="meal-image">
+                <button
+                  className="meal-delete-btn"
+                  onClick={() => {
+                    if (confirm('Удалить это блюдо?')) {
+                      onMealDelete(meal.id)
+                    }
+                  }}
+                >
+                  🗑️
+                </button>
+                <div className="meal-image meal-clickable" onClick={() => setSelectedMeal(meal)}>
                   {meal.imageUrl ? (
                     <img src={meal.imageUrl} alt={meal.dishName} />
                   ) : (
                     <span className="meal-emoji">🍽️</span>
                   )}
                 </div>
-                <div className="meal-details">
+                <div className="meal-details meal-clickable" onClick={() => setSelectedMeal(meal)}>
                   <div className="meal-header">
-                    <h4>{meal.dishName}</h4>
+                    <h4 style={{ cursor: 'pointer' }}>{meal.dishName}</h4>
                     <span className="meal-time">{time}</span>
                   </div>
                   <p className="meal-portion">{meal.portionSize}</p>
@@ -79,9 +91,23 @@ export default function HistoryScreen({ meals }: { meals: Meal[] }) {
                     </p>
                   )}
                   {meal.notes && <p className="meal-notes">📝 {meal.notes}</p>}
-                  <p className="confidence-level">
-                    {meal.confidence >= 80 ? '✅' : meal.confidence >= 60 ? '⚠️' : '❌'} Confidence: {meal.confidence}%
-                  </p>
+                  <div className="confidence-bar-wrap">
+                    <div className="confidence-bar">
+                      <div
+                        className="confidence-fill"
+                        style={{
+                          width: `${meal.confidence}%`,
+                          background: meal.confidence >= 80 ? '#3fa876' : meal.confidence >= 60 ? '#f39c12' : '#e74c3c'
+                        }}
+                      />
+                    </div>
+                    <span className="confidence-label">
+                      {meal.confidence >= 80 ? 'Высокая' : meal.confidence >= 60 ? 'Средняя' : 'Низкая'} точность ({meal.confidence}%)
+                    </span>
+                  </div>
+                  {meal.confidence < 70 && (
+                    <p className="confidence-hint">Калорийность может отличаться из-за неполной видимости блюда</p>
+                  )}
                 </div>
                 <div className="meal-calories">
                   <span className="calories-badge">{meal.calories}</span>
@@ -92,6 +118,17 @@ export default function HistoryScreen({ meals }: { meals: Meal[] }) {
           })
         )}
       </div>
+
+      {selectedMeal && (() => {
+        const { id, userId, createdAt, ...mealResult } = selectedMeal
+        return (
+          <ResultCard
+            result={mealResult}
+            imageUrl={selectedMeal.imageUrl || ''}
+            onClose={() => setSelectedMeal(null)}
+          />
+        )
+      })()}
     </div>
   )
 }

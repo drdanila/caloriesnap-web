@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { User } from 'firebase/auth'
 import { signOut } from '../services/authService'
-import { analyzeMealImage, fetchUserMeals, Meal, saveMeal } from '../services/mealService'
+import { analyzeMealImage, fetchUserMeals, Meal, saveMeal, deleteMeal } from '../services/mealService'
 import HistoryScreen from './HistoryScreen'
 import { ResultCard } from '../components/ResultCard'
 import { Toast } from '../components/Toast'
@@ -150,7 +150,13 @@ export default function MainScreen({ user }: { user: User }) {
           />
         </div>
       ) : (
-        <HistoryScreen meals={meals} />
+        <HistoryScreen
+          meals={meals}
+          onMealDelete={async (id) => {
+            await deleteMeal(id)
+            await loadMeals()
+          }}
+        />
       )}
 
       {result && previewUrl && (

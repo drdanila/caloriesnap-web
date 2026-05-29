@@ -71,6 +71,7 @@ app.post('/analyze', async (req, res) => {
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 1024,
+      temperature: 0.1,
       messages: [
         {
           role: 'user',
@@ -112,7 +113,9 @@ Return ONLY valid JSON (no markdown, no extra text) with these fields:
 
 Be conservative with estimates - better to slightly overestimate calories.
 
-IMPORTANT: Respond in Russian language. All text fields (dishName, portionSize, ingredients, notes) must be in Russian.`
+IMPORTANT: Respond in Russian language. All text fields (dishName, portionSize, ingredients, notes) must be in Russian.
+
+ТОЧНОСТЬ: Используй базу данных USDA FoodData Central как эталон для калорийности и БЖУ. Твои оценки должны быть воспроизводимыми — если анализировать это блюдо несколько раз, результат должен отличаться не более чем на 5%. Будь конкретным в размерах порций (измеримые единицы, не "средний").`
             }
           ],
         }
