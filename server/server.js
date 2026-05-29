@@ -56,7 +56,7 @@ app.post('/analyze', async (req, res) => {
     if (!isFood) {
       return res.status(400).json({
         error: 'Not a food image',
-        message: 'Please upload a photo of food or a prepared meal.',
+        message: 'Пожалуйста, загрузите фото еды или приготовленного блюда.',
       });
     }
 
@@ -103,7 +103,9 @@ Return ONLY valid JSON (no markdown, no extra text) with these fields:
   "notes": "any important notes about estimation (e.g., 'sauce not visible', 'oil used estimated')"
 }
 
-Be conservative with estimates - better to slightly overestimate calories.`
+Be conservative with estimates - better to slightly overestimate calories.
+
+IMPORTANT: Respond in Russian language. All text fields (dishName, portionSize, ingredients, notes) must be in Russian.`
             }
           ],
         }

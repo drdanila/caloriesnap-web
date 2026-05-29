@@ -48,7 +48,10 @@ export async function analyzeMealImage(imageFile: File, userId: string) {
       }
     )
 
-    if (!response.ok) throw new Error('Analysis failed')
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.message || errorData.error || 'Ошибка анализа')
+    }
     return response.json()
   } catch (error) {
     console.error('Error analyzing meal:', error)

@@ -140,7 +140,7 @@
 }
 
 .analyzing-overlay {
-  position: absolute;
+  position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.6);
   display: flex;
@@ -149,8 +149,8 @@
   justify-content: center;
   color: white;
   font-size: 18px;
-  z-index: 10;
-  border-radius: 12px;
+  z-index: 1000;
+  border-radius: 0;
   gap: 16px;
   backdrop-filter: blur(2px);
 }

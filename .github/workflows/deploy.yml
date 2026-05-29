@@ -38,6 +38,12 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: npx firebase-tools deploy --token ${{ secrets.FIREBASE_TOKEN }} --project eatappmain-e7503 --only hosting,firestore:rules,firestore:indexes
 
+      - name: Configure Storage CORS
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          gcloud auth activate-service-account --key-file=<(echo '${{ secrets.GCP_SA_KEY }}' | base64 -d)
+          gsutil cors set cors.json gs://eatappmain-e7503.firebasestorage.app
+
       - name: Authenticate to Google Cloud
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: google-github-actions/auth@v2

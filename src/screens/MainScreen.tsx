@@ -4,6 +4,7 @@ import { signOut } from '../services/authService'
 import { analyzeMealImage, fetchUserMeals, Meal, saveMeal } from '../services/mealService'
 import HistoryScreen from './HistoryScreen'
 import { ResultCard } from '../components/ResultCard'
+import { Toast } from '../components/Toast'
 import './MainScreen.css'
 
 export default function MainScreen({ user }: { user: User }) {
@@ -13,6 +14,7 @@ export default function MainScreen({ user }: { user: User }) {
   const [result, setResult] = useState<Omit<Meal, 'id' | 'userId' | 'createdAt'> | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [currentFile, setCurrentFile] = useState<File | null>(null)
+  const [toast, setToast] = useState<{message: string; type: 'error'|'success'} | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -41,25 +43,25 @@ export default function MainScreen({ user }: { user: User }) {
       const analysisResult = await analyzeMealImage(file, user.uid)
       setResult(analysisResult)
 
-      // Save meal without image upload (to avoid CORS issues)
-      // Image is shown via browser ObjectURL
       const mealId = await saveMeal(
         {
           ...analysisResult,
           userId: user.uid
         },
-        null // Don't upload image to Firebase Storage
+        file
       )
 
       console.log('Meal saved:', mealId)
       await loadMeals()
     } catch (error: any) {
       console.error('Analysis error:', error)
-      const errorMessage = error?.response?.data?.message || error?.message
-      if (errorMessage?.includes('Not a food image')) {
-        alert('⚠️ Please upload a photo of food or a prepared meal.\n\nThe image should show actual food items or a dish, not other objects.')
+      const errorMessage = error?.message || ''
+      if (errorMessage.includes('Not a food image')) {
+        setToast({ type: 'error', message: 'Пожалуйста, загрузите фото еды или приготовленного блюда.' })
+      } else if (errorMessage.includes('Ошибка анализа')) {
+        setToast({ type: 'error', message: 'Ошибка анализа. Попробуйте снова.' })
       } else {
-        alert('Failed to analyze meal. Please try again.')
+        setToast({ type: 'error', message: 'Не удалось анализировать блюдо. Попробуйте снова.' })
       }
       setResult(null)
       setPreviewUrl(null)
@@ -169,6 +171,14 @@ export default function MainScreen({ user }: { user: User }) {
             setPreviewUrl(null)
             setCurrentFile(null)
           }}
+        />
+      )}
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
         />
       )}
 
