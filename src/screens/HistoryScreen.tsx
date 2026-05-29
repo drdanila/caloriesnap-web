@@ -58,13 +58,25 @@ export default function HistoryScreen({ meals, onMealDelete }: { meals: Meal[]; 
             })
             return (
               <div key={meal.id} className="meal-item">
-                <div className="meal-image meal-clickable" onClick={() => setSelectedMeal(meal)}>
-                  {meal.imageUrl ? (
-                    <img src={meal.imageUrl} alt={meal.dishName} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                  ) : (
-                    <span className="meal-emoji">🍽️</span>
-                  )}
+                <button
+                  className="meal-delete-btn"
+                  onClick={() => setConfirmingId(meal.id)}
+                  title="Delete meal"
+                >
+                  🗑️
+                </button>
+
+                <div className="meal-image-col">
+                  <div className="meal-image meal-clickable" onClick={() => setSelectedMeal(meal)}>
+                    {meal.imageUrl ? (
+                      <img src={meal.imageUrl} alt={meal.dishName} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                    ) : (
+                      <span className="meal-emoji">🍽️</span>
+                    )}
+                  </div>
+                  <span className="meal-cal-badge">{meal.calories}</span>
                 </div>
+
                 <div className="meal-details meal-clickable" onClick={() => setSelectedMeal(meal)}>
                   <div className="meal-header">
                     <h4 style={{ cursor: 'pointer' }}>{meal.dishName}</h4>
@@ -99,17 +111,6 @@ export default function HistoryScreen({ meals, onMealDelete }: { meals: Meal[]; 
                   {meal.confidence < 70 && (
                     <p className="confidence-hint">Калорийность может отличаться из-за неполной видимости блюда</p>
                   )}
-                </div>
-                <div className="meal-calories">
-                  <span className="calories-badge">{meal.calories}</span>
-                  <span className="calories-unit">kcal</span>
-                  <button
-                    className="meal-delete-btn"
-                    onClick={() => setConfirmingId(meal.id)}
-                    title="Delete meal"
-                  >
-                    ×
-                  </button>
                 </div>
               </div>
             )

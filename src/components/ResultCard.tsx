@@ -18,8 +18,6 @@ export function ResultCard({ result, imageUrl, onClose }: ResultCardProps) {
     <>
       <div className="result-backdrop" onClick={onClose} />
       <div className="result-card">
-        <button className="result-close" onClick={onClose}>✕</button>
-
         <img src={imageUrl} alt={result.dishName} className="result-image" />
 
         <h2 className="result-dish">{result.dishName}</h2>

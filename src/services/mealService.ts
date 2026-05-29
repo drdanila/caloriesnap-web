@@ -30,8 +30,30 @@ export interface Meal {
   createdAt: Date
 }
 
+async function compressImage(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      const maxW = 1920
+      const scale = Math.min(1, maxW / img.width)
+      const canvas = document.createElement('canvas')
+      canvas.width = img.width * scale
+      canvas.height = img.height * scale
+      canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height)
+      URL.revokeObjectURL(url)
+      resolve(canvas.toDataURL('image/jpeg', 0.85).split(',')[1])
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error('Failed to compress image'))
+    }
+    img.src = url
+  })
+}
+
 export async function analyzeMealImage(imageFile: File, userId: string) {
-  const base64 = await fileToBase64(imageFile)
+  const base64 = await compressImage(imageFile)
 
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080'
 
@@ -42,7 +64,7 @@ export async function analyzeMealImage(imageFile: File, userId: string) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          imageBase64: base64.split(',')[1],
+          imageBase64: base64,
           userId,
           mimeType: imageFile.type,
         })
@@ -51,7 +73,7 @@ export async function analyzeMealImage(imageFile: File, userId: string) {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.message || errorData.error || 'Ошибка анализа')
+      throw new Error(errorData.message || errorData.details || errorData.error || 'Ошибка анализа')
     }
     return response.json()
   } catch (error) {

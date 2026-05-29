@@ -34,29 +34,6 @@
   }
 }
 
-.result-close {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: rgba(255, 255, 255, 0.85);
-  border-radius: 50%;
-  font-size: 24px;
-  cursor: pointer;
-  color: #666;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.2s, background 0.2s;
-}
-
-.result-close:hover {
-  color: #2d2d2d;
-  background: rgba(255, 255, 255, 0.95);
-}
-
 .result-image {
   width: 100%;
   height: 240px;
