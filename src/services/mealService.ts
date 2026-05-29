@@ -72,37 +72,35 @@ export async function fetchUserMeals(userId: string): Promise<Meal[]> {
   })) as Meal[]
 }
 
-export async function saveMeal(mealData: Omit<Meal, 'id' | 'createdAt'>, imageFile: File): Promise<string> {
+export async function saveMeal(mealData: Omit<Meal, 'id' | 'createdAt'>, imageFile: File | null): Promise<string> {
   try {
-    const timestamp = Date.now()
-    const fileName = `${mealData.userId}/${timestamp}.jpg`
-    const storageRef = ref(storage, `meals/${fileName}`)
+    let imageUrl: string | undefined
 
-    await uploadBytes(storageRef, imageFile)
-    const imageUrl = await getDownloadURL(storageRef)
+    // Upload image to Firebase Storage if provided
+    if (imageFile) {
+      try {
+        const timestamp = Date.now()
+        const fileName = `${mealData.userId}/${timestamp}.jpg`
+        const storageRef = ref(storage, `meals/${fileName}`)
+
+        await uploadBytes(storageRef, imageFile)
+        imageUrl = await getDownloadURL(storageRef)
+      } catch (storageError: any) {
+        console.warn('Storage upload failed, saving meal without image:', storageError)
+        // Continue without image URL
+      }
+    }
 
     const mealsCollection = collection(db, 'meals')
     const docRef = await addDoc(mealsCollection, {
       ...mealData,
-      imageUrl,
+      ...(imageUrl && { imageUrl }),
       createdAt: serverTimestamp()
     })
 
     return docRef.id
   } catch (error: any) {
     console.error('Error saving meal:', error)
-
-    // If Storage fails, save without image URL (graceful degradation)
-    if (error.code === 'storage/unauthenticated' || error.message?.includes('CORS')) {
-      console.warn('Storage upload failed, saving meal without image')
-      const mealsCollection = collection(db, 'meals')
-      const docRef = await addDoc(mealsCollection, {
-        ...mealData,
-        createdAt: serverTimestamp()
-      })
-      return docRef.id
-    }
-
     throw error
   }
 }

@@ -41,14 +41,17 @@ export default function MainScreen({ user }: { user: User }) {
       const analysisResult = await analyzeMealImage(file, user.uid)
       setResult(analysisResult)
 
-      await saveMeal(
+      // Save meal without image upload (to avoid CORS issues)
+      // Image is shown via browser ObjectURL
+      const mealId = await saveMeal(
         {
           ...analysisResult,
           userId: user.uid
         },
-        file
+        null // Don't upload image to Firebase Storage
       )
 
+      console.log('Meal saved:', mealId)
       await loadMeals()
     } catch (error: any) {
       console.error('Analysis error:', error)
