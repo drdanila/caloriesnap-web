@@ -24,8 +24,8 @@ jobs:
       - name: Install Cloud Functions dependencies
         run: cd functions && npm install && cd ..
 
-      - name: Create .env.local for Cloud Functions
-        run: echo "ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}" > functions/.env.local
+      - name: Create .env for Cloud Functions
+        run: echo "ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}" > functions/.env
 
       - name: Build
         env:
