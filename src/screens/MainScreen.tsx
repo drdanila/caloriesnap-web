@@ -42,27 +42,18 @@ export default function MainScreen({ user }: { user: User }) {
     try {
       const analysisResult = await analyzeMealImage(file, user.uid)
       setResult(analysisResult)
+      setAnalyzing(false)
 
-      const mealId = await saveMeal(
-        {
-          ...analysisResult,
-          userId: user.uid
-        },
-        file
-      )
-
-      console.log('Meal saved:', mealId)
-      await loadMeals()
+      try {
+        await saveMeal({ ...analysisResult, userId: user.uid }, file)
+        await loadMeals()
+      } catch (saveError) {
+        console.warn('Failed to save meal:', saveError)
+      }
     } catch (error: any) {
       console.error('Analysis error:', error)
-      const errorMessage = error?.message || ''
-      if (errorMessage.includes('Not a food image')) {
-        setToast({ type: 'error', message: 'Пожалуйста, загрузите фото еды или приготовленного блюда.' })
-      } else if (errorMessage.includes('Ошибка анализа')) {
-        setToast({ type: 'error', message: 'Ошибка анализа. Попробуйте снова.' })
-      } else {
-        setToast({ type: 'error', message: 'Не удалось анализировать блюдо. Попробуйте снова.' })
-      }
+      const errorMessage = error?.message || 'Не удалось анализировать блюдо. Попробуйте снова.'
+      setToast({ type: 'error', message: errorMessage })
       setResult(null)
       setPreviewUrl(null)
     } finally {
