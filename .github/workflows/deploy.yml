@@ -44,14 +44,14 @@ jobs:
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
+      - name: Setup Google Cloud SDK
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: google-github-actions/setup-gcloud@v2
+
       - name: Configure Storage CORS
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           gsutil cors set cors.json gs://eatappmain-e7503.firebasestorage.app
-
-      - name: Setup Google Cloud SDK
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: google-github-actions/setup-gcloud@v2
 
       - name: Build and Push Docker Image
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
