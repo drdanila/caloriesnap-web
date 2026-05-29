@@ -10,6 +10,20 @@ import {
 const googleProvider = new GoogleAuthProvider()
 
 export async function signInWithGoogle() {
+  console.log('🔐 Sign-in attempt:', {
+    authExists: !!auth,
+    providerExists: !!googleProvider,
+    providerType: googleProvider?.constructor?.name,
+  })
+
+  if (!auth) {
+    throw new Error('Firebase auth is not initialized')
+  }
+
+  if (!googleProvider) {
+    throw new Error('Google provider is not initialized')
+  }
+
   return signInWithPopup(auth, googleProvider)
 }
 

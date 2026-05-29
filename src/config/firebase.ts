@@ -11,6 +11,13 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 }
 
+console.log('🔥 Firebase config:', {
+  hasApiKey: !!firebaseConfig.apiKey,
+  hasAuthDomain: !!firebaseConfig.authDomain,
+  hasProjectId: !!firebaseConfig.projectId,
+  projectId: firebaseConfig.projectId,
+})
+
 const app = initializeApp(firebaseConfig)
 
 export const auth = initializeAuth(app, {
@@ -18,3 +25,5 @@ export const auth = initializeAuth(app, {
 })
 
 export const db = getFirestore(app)
+
+console.log('✅ Firebase initialized')
