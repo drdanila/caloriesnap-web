@@ -100,12 +100,12 @@ export default function MainScreen({ user }: { user: User }) {
             <h2>Today's Calories</h2>
             <div className="calories-display">
               <span className="calories-number">{totalCalories}</span>
-              <span className="calories-goal">/ 4000 kcal</span>
+              <span className="calories-goal">/ 1800 kcal</span>
             </div>
             <div className="progress-bar">
               <div
                 className="progress-fill"
-                style={{ width: `${Math.min((totalCalories / 4000) * 100, 100)}%` }}
+                style={{ width: `${Math.min((totalCalories / 1800) * 100, 100)}%` }}
               ></div>
             </div>
             <p className="meal-count">{todayMeals.length} meals logged today</p>
