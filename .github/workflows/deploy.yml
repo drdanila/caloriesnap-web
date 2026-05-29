@@ -47,12 +47,13 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Build and Push Docker Image
+      - name: Build and Push Docker Image to Container Registry
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          gcloud builds submit --tag gcr.io/eatappmain-e7503/caloriesnap-api:latest \
-            --substitutions=_SERVICE_NAME=caloriesnap-api,_REGION=us-central1 \
-            --gcloud-dir server/
+          gcloud builds submit \
+            --tag gcr.io/eatappmain-e7503/caloriesnap-api:latest \
+            --project eatappmain-e7503 \
+            server/
 
       - name: Deploy to Cloud Run
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
