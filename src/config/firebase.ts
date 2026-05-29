@@ -16,6 +16,9 @@ console.log('🔥 Firebase config:', {
   hasAuthDomain: !!firebaseConfig.authDomain,
   hasProjectId: !!firebaseConfig.projectId,
   projectId: firebaseConfig.projectId,
+  apiKey: firebaseConfig.apiKey?.substring(0, 20) + '...',
+  authDomain: firebaseConfig.authDomain,
+  appId: firebaseConfig.appId,
 })
 
 const app = initializeApp(firebaseConfig)
