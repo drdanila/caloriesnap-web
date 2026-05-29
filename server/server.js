@@ -123,15 +123,24 @@ Be conservative with estimates - better to slightly overestimate calories.`
       let jsonText = textContent.text.trim();
 
       // Extract JSON from markdown code block if present
-      const jsonMatch = jsonText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+      const jsonMatch = jsonText.match(/```(?:json)?\n?([\s\S]*?)\n?```/);
       if (jsonMatch) {
         jsonText = jsonMatch[1].trim();
       }
 
+      // Also try to extract JSON object directly if no markdown
+      if (!jsonMatch) {
+        const objectMatch = jsonText.match(/\{[\s\S]*\}/);
+        if (objectMatch) {
+          jsonText = objectMatch[0];
+        }
+      }
+
+      console.log('Extracted JSON text:', jsonText.substring(0, 200));
       nutritionData = JSON.parse(jsonText);
     } catch (e) {
       console.error('JSON parse error:', e.message);
-      console.error('Attempted to parse:', textContent.text);
+      console.error('Attempted to parse:', textContent.text.substring(0, 500));
       return res.status(500).json({ error: 'Failed to parse nutrition data', details: e.message });
     }
 
