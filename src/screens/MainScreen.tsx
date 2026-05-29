@@ -85,7 +85,7 @@ export default function MainScreen({ user }: { user: User }) {
   return (
     <div className="main-container">
       <header className="header">
-        <h1>CalorieSnap</h1>
+        <h1><span className="logo">🍎</span>CalorieSnap</h1>
         <div className="header-actions">
           <span className="user-name">Hi, {user.displayName?.split(' ')[0]}</span>
           <button onClick={handleSignOut} className="signout-btn">
