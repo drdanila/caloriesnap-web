@@ -17,8 +17,11 @@ export interface Meal {
   protein: number
   fat: number
   carbs: number
+  fiber?: number
   confidence: number
   portionSize: string
+  ingredients?: string[]
+  notes?: string
   createdAt: Date
 }
 

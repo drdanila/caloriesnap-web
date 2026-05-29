@@ -31,11 +31,24 @@ export default function MainScreen({ user }: { user: User }) {
     setAnalyzing(true)
     try {
       const result = await analyzeMealImage(file, user.uid)
-      alert(`Found: ${result.dishName}\nCalories: ${result.calories} kcal`)
+      const details = [
+        `Dish: ${result.dishName}`,
+        `Calories: ${result.calories} kcal`,
+        `Protein: ${result.protein}g | Fat: ${result.fat}g | Carbs: ${result.carbs}g`,
+        ...(result.fiber ? [`Fiber: ${result.fiber}g`] : []),
+        `Portion: ${result.portionSize}`,
+        `Confidence: ${result.confidence}%`
+      ].join('\n')
+      alert(details)
       await loadMeals()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Analysis error:', error)
-      alert('Failed to analyze meal. Please try again.')
+      const errorMessage = error?.response?.data?.message || error?.message
+      if (errorMessage?.includes('Not a food image')) {
+        alert('⚠️ Please upload a photo of food or a prepared meal.\n\nThe image should show actual food items or a dish, not other objects.')
+      } else {
+        alert('Failed to analyze meal. Please try again.')
+      }
     } finally {
       setAnalyzing(false)
     }

@@ -53,9 +53,20 @@ export default function HistoryScreen({ meals }: { meals: Meal[] }) {
                 <div className="meal-details">
                   <h4>{meal.dishName}</h4>
                   <p className="meal-portion">{meal.portionSize}</p>
-                  {meal.confidence < 0.6 && (
-                    <p className="confidence-warning">⚠️ Low confidence estimate</p>
+                  <p className="meal-macros">
+                    P: {meal.protein}g | F: {meal.fat}g | C: {meal.carbs}g
+                    {meal.fiber && ` | Fiber: ${meal.fiber}g`}
+                  </p>
+                  {meal.ingredients && meal.ingredients.length > 0 && (
+                    <p className="meal-ingredients">
+                      {meal.ingredients.slice(0, 3).join(', ')}
+                      {meal.ingredients.length > 3 && ` +${meal.ingredients.length - 3}`}
+                    </p>
                   )}
+                  {meal.notes && <p className="meal-notes">📝 {meal.notes}</p>}
+                  <p className="confidence-level">
+                    {meal.confidence >= 80 ? '✅' : meal.confidence >= 60 ? '⚠️' : '❌'} Confidence: {meal.confidence}%
+                  </p>
                 </div>
                 <div className="meal-calories">
                   <span className="calories-badge">{meal.calories}</span>
