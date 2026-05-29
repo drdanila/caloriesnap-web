@@ -166,9 +166,6 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
-      - name: Wait for deployment to be ready
-        run: sleep 10
-
       - name: Check Frontend Health
         run: |
           response=$(curl -s -o /dev/null -w "%{http_code}" https://eatappmain-e7503.firebaseapp.com/)
