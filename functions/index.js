@@ -51,7 +51,7 @@ exports.analyzeMeal = functions.https.onRequest(async (req, res) => {
 
     const anthropic = getAnthropicClient();
     const validationMessage = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-sonnet-4-6',
       max_tokens: 100,
       messages: [
         {
@@ -84,7 +84,7 @@ exports.analyzeMeal = functions.https.onRequest(async (req, res) => {
     }
 
     const message = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-sonnet-4-6',
       max_tokens: 1024,
       messages: [
         {
