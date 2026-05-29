@@ -4,7 +4,7 @@ const admin = require('firebase-admin');
 const crypto = require('crypto');
 
 const app = express();
-app.use(express.json({ limit: '50mb' }));
+app.use(express.json({ limit: '40mb' }));
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
