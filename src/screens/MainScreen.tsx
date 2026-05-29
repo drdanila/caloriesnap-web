@@ -1,14 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
 import { User } from 'firebase/auth'
 import { signOut } from '../services/authService'
-import { analyzeMealImage, fetchUserMeals, Meal } from '../services/mealService'
+import { analyzeMealImage, fetchUserMeals, Meal, saveMeal } from '../services/mealService'
 import HistoryScreen from './HistoryScreen'
+import { ResultCard } from '../components/ResultCard'
 import './MainScreen.css'
 
 export default function MainScreen({ user }: { user: User }) {
   const [meals, setMeals] = useState<Meal[]>([])
   const [analyzing, setAnalyzing] = useState(false)
   const [activeTab, setActiveTab] = useState<'home' | 'history'>('home')
+  const [result, setResult] = useState<Omit<Meal, 'id' | 'userId' | 'createdAt'> | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [currentFile, setCurrentFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -28,18 +32,23 @@ export default function MainScreen({ user }: { user: User }) {
   const handleImageSelect = async (file: File) => {
     if (!user.uid || !file) return
 
+    setCurrentFile(file)
+    const previewDataUrl = URL.createObjectURL(file)
+    setPreviewUrl(previewDataUrl)
     setAnalyzing(true)
+
     try {
-      const result = await analyzeMealImage(file, user.uid)
-      const details = [
-        `Dish: ${result.dishName}`,
-        `Calories: ${result.calories} kcal`,
-        `Protein: ${result.protein}g | Fat: ${result.fat}g | Carbs: ${result.carbs}g`,
-        ...(result.fiber ? [`Fiber: ${result.fiber}g`] : []),
-        `Portion: ${result.portionSize}`,
-        `Confidence: ${result.confidence}%`
-      ].join('\n')
-      alert(details)
+      const analysisResult = await analyzeMealImage(file, user.uid)
+      setResult(analysisResult)
+
+      await saveMeal(
+        {
+          ...analysisResult,
+          userId: user.uid
+        },
+        file
+      )
+
       await loadMeals()
     } catch (error: any) {
       console.error('Analysis error:', error)
@@ -49,6 +58,8 @@ export default function MainScreen({ user }: { user: User }) {
       } else {
         alert('Failed to analyze meal. Please try again.')
       }
+      setResult(null)
+      setPreviewUrl(null)
     } finally {
       setAnalyzing(false)
     }
@@ -127,7 +138,12 @@ export default function MainScreen({ user }: { user: User }) {
             </button>
           </div>
 
-          {analyzing && <div className="analyzing-overlay">Analyzing...</div>}
+          {analyzing && (
+            <div className="analyzing-overlay">
+              <div className="loader-spinner"></div>
+              <p>Analyzing your meal...</p>
+            </div>
+          )}
 
           <input
             ref={fileInputRef}
@@ -139,6 +155,18 @@ export default function MainScreen({ user }: { user: User }) {
         </div>
       ) : (
         <HistoryScreen meals={meals} />
+      )}
+
+      {result && previewUrl && (
+        <ResultCard
+          result={result}
+          imageUrl={previewUrl}
+          onClose={() => {
+            setResult(null)
+            setPreviewUrl(null)
+            setCurrentFile(null)
+          }}
+        />
       )}
 
       <nav className="bottom-nav">

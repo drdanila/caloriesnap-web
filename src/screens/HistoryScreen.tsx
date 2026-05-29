@@ -49,7 +49,13 @@ export default function HistoryScreen({ meals }: { meals: Meal[] }) {
             <h3 className="date-header">{date}</h3>
             {dayMeals.map((meal) => (
               <div key={meal.id} className="meal-item">
-                <div className="meal-emoji">🍽️</div>
+                <div className="meal-image">
+                  {meal.imageUrl ? (
+                    <img src={meal.imageUrl} alt={meal.dishName} />
+                  ) : (
+                    <span className="meal-emoji">🍽️</span>
+                  )}
+                </div>
                 <div className="meal-details">
                   <h4>{meal.dishName}</h4>
                   <p className="meal-portion">{meal.portionSize}</p>

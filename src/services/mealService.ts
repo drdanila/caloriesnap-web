@@ -1,4 +1,4 @@
-import { db } from '../config/firebase'
+import { db, storage } from '../config/firebase'
 import {
   collection,
   query,
@@ -6,8 +6,11 @@ import {
   orderBy,
   getDocs,
   Query,
-  DocumentData
+  DocumentData,
+  addDoc,
+  serverTimestamp
 } from 'firebase/firestore'
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 
 export interface Meal {
   id: string
@@ -22,6 +25,7 @@ export interface Meal {
   portionSize: string
   ingredients?: string[]
   notes?: string
+  imageUrl?: string
   createdAt: Date
 }
 
@@ -66,6 +70,24 @@ export async function fetchUserMeals(userId: string): Promise<Meal[]> {
     ...doc.data(),
     createdAt: doc.data().createdAt?.toDate() || new Date()
   })) as Meal[]
+}
+
+export async function saveMeal(mealData: Omit<Meal, 'id' | 'createdAt'>, imageFile: File): Promise<string> {
+  const timestamp = Date.now()
+  const fileName = `${mealData.userId}/${timestamp}.jpg`
+  const storageRef = ref(storage, `meals/${fileName}`)
+
+  await uploadBytes(storageRef, imageFile)
+  const imageUrl = await getDownloadURL(storageRef)
+
+  const mealsCollection = collection(db, 'meals')
+  const docRef = await addDoc(mealsCollection, {
+    ...mealData,
+    imageUrl,
+    createdAt: serverTimestamp()
+  })
+
+  return docRef.id
 }
 
 async function fileToBase64(file: File): Promise<string> {
