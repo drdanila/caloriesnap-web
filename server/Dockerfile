@@ -2,7 +2,7 @@ FROM node:22-slim AS deps
 
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN npm install --production
 
 FROM node:22-slim
 
