@@ -37,6 +37,4 @@ jobs:
 
       - name: Deploy to Firebase
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          npx firebase-tools functions:config:set anthropic.api_key="${{ secrets.ANTHROPIC_API_KEY }}" --token ${{ secrets.FIREBASE_TOKEN }} --project eatappmain-e7503
-          npx firebase-tools deploy --token ${{ secrets.FIREBASE_TOKEN }} --project eatappmain-e7503
+        run: npx firebase-tools deploy --token ${{ secrets.FIREBASE_TOKEN }} --project eatappmain-e7503 --set-env-vars ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}

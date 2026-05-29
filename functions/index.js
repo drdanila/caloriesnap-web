@@ -9,8 +9,7 @@ let client;
 function getAnthropicClient() {
   if (client) return client;
 
-  const config = functions.config();
-  const apiKey = config.anthropic?.api_key || process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.ANTHROPIC_API_KEY;
 
   if (!apiKey) {
     throw new Error('ANTHROPIC_API_KEY not configured');
