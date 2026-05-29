@@ -73,21 +73,38 @@ export async function fetchUserMeals(userId: string): Promise<Meal[]> {
 }
 
 export async function saveMeal(mealData: Omit<Meal, 'id' | 'createdAt'>, imageFile: File): Promise<string> {
-  const timestamp = Date.now()
-  const fileName = `${mealData.userId}/${timestamp}.jpg`
-  const storageRef = ref(storage, `meals/${fileName}`)
+  try {
+    const timestamp = Date.now()
+    const fileName = `${mealData.userId}/${timestamp}.jpg`
+    const storageRef = ref(storage, `meals/${fileName}`)
 
-  await uploadBytes(storageRef, imageFile)
-  const imageUrl = await getDownloadURL(storageRef)
+    await uploadBytes(storageRef, imageFile)
+    const imageUrl = await getDownloadURL(storageRef)
 
-  const mealsCollection = collection(db, 'meals')
-  const docRef = await addDoc(mealsCollection, {
-    ...mealData,
-    imageUrl,
-    createdAt: serverTimestamp()
-  })
+    const mealsCollection = collection(db, 'meals')
+    const docRef = await addDoc(mealsCollection, {
+      ...mealData,
+      imageUrl,
+      createdAt: serverTimestamp()
+    })
 
-  return docRef.id
+    return docRef.id
+  } catch (error: any) {
+    console.error('Error saving meal:', error)
+
+    // If Storage fails, save without image URL (graceful degradation)
+    if (error.code === 'storage/unauthenticated' || error.message?.includes('CORS')) {
+      console.warn('Storage upload failed, saving meal without image')
+      const mealsCollection = collection(db, 'meals')
+      const docRef = await addDoc(mealsCollection, {
+        ...mealData,
+        createdAt: serverTimestamp()
+      })
+      return docRef.id
+    }
+
+    throw error
+  }
 }
 
 async function fileToBase64(file: File): Promise<string> {
