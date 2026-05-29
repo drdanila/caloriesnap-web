@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { User } from 'firebase/auth'
 import { signOut } from '../services/authService'
 import { analyzeMealImage, fetchUserMeals, Meal, saveMeal, deleteMeal } from '../services/mealService'
-import HistoryScreen from './HistoryScreen'
 import { ResultCard } from '../components/ResultCard'
 import { Toast } from '../components/Toast'
 import './MainScreen.css'
+
+const HistoryScreen = lazy(() => import('./HistoryScreen'))
 
 export default function MainScreen({ user }: { user: User }) {
   const [meals, setMeals] = useState<Meal[]>([])
@@ -150,13 +151,15 @@ export default function MainScreen({ user }: { user: User }) {
           />
         </div>
       ) : (
-        <HistoryScreen
-          meals={meals}
-          onMealDelete={async (id) => {
-            await deleteMeal(id)
-            await loadMeals()
-          }}
-        />
+        <Suspense fallback={<div className="loading-fallback">Loading history...</div>}>
+          <HistoryScreen
+            meals={meals}
+            onMealDelete={async (id) => {
+              await deleteMeal(id)
+              await loadMeals()
+            }}
+          />
+        </Suspense>
       )}
 
       {result && previewUrl && (

@@ -1,10 +1,13 @@
+FROM node:22-slim AS deps
+
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+
 FROM node:22-slim
 
 WORKDIR /app
-
-COPY package*.json ./
-RUN npm install --production
-
+COPY --from=deps /app/node_modules ./node_modules
 COPY server.js .
 
 ENV PORT=8080
