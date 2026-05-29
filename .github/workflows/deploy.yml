@@ -34,6 +34,13 @@ jobs:
           VITE_API_URL: ${{ vars.VITE_API_URL }}
         run: npm run build
 
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 1
+
   deploy-frontend:
     needs: build
     runs-on: ubuntu-latest
@@ -41,6 +48,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Download dist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
 
       - name: Deploy Frontend and Firestore Rules to Firebase
         run: npx firebase-tools deploy --token ${{ secrets.FIREBASE_TOKEN }} --project eatappmain-e7503 --only hosting,firestore:rules,firestore:indexes
