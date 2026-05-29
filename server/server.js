@@ -112,23 +112,31 @@ Be conservative with estimates - better to slightly overestimate calories.`
 
     const textContent = message.content.find(block => block.type === 'text');
     if (!textContent) {
+      console.error('No text content in Claude response');
       return res.status(500).json({ error: 'No text response from Claude' });
     }
+
+    console.log('Claude response text:', textContent.text);
 
     let nutritionData;
     try {
       nutritionData = JSON.parse(textContent.text);
     } catch (e) {
+      console.error('JSON parse error:', e.message);
+      console.error('Attempted to parse:', textContent.text);
       return res.status(500).json({ error: 'Failed to parse nutrition data', details: e.message });
     }
 
+    console.log('Successfully parsed nutrition data:', nutritionData);
     res.json(nutritionData);
 
   } catch (error) {
     console.error('Error analyzing meal:', error);
+    console.error('Full error:', JSON.stringify(error, null, 2));
     res.status(500).json({
       error: 'Analysis failed',
-      details: error.message
+      details: error.message,
+      type: error.constructor.name
     });
   }
 });
