@@ -6,6 +6,7 @@ import './HistoryScreen.css'
 export default function HistoryScreen({ meals, onMealDelete }: { meals: Meal[]; onMealDelete: (id: string) => Promise<void> }) {
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null)
+  const [confirmingId, setConfirmingId] = useState<string | null>(null)
 
   const isToday = selectedDate.toDateString() === new Date().toDateString()
 
@@ -57,19 +58,9 @@ export default function HistoryScreen({ meals, onMealDelete }: { meals: Meal[]; 
             })
             return (
               <div key={meal.id} className="meal-item">
-                <button
-                  className="meal-delete-btn"
-                  onClick={() => {
-                    if (confirm('Удалить это блюдо?')) {
-                      onMealDelete(meal.id)
-                    }
-                  }}
-                >
-                  🗑️
-                </button>
                 <div className="meal-image meal-clickable" onClick={() => setSelectedMeal(meal)}>
                   {meal.imageUrl ? (
-                    <img src={meal.imageUrl} alt={meal.dishName} />
+                    <img src={meal.imageUrl} alt={meal.dishName} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
                   ) : (
                     <span className="meal-emoji">🍽️</span>
                   )}
@@ -112,6 +103,13 @@ export default function HistoryScreen({ meals, onMealDelete }: { meals: Meal[]; 
                 <div className="meal-calories">
                   <span className="calories-badge">{meal.calories}</span>
                   <span className="calories-unit">kcal</span>
+                  <button
+                    className="meal-delete-btn"
+                    onClick={() => setConfirmingId(meal.id)}
+                    title="Delete meal"
+                  >
+                    ×
+                  </button>
                 </div>
               </div>
             )
@@ -129,6 +127,32 @@ export default function HistoryScreen({ meals, onMealDelete }: { meals: Meal[]; 
           />
         )
       })()}
+
+      {confirmingId && (
+        <>
+          <div className="confirm-backdrop" onClick={() => setConfirmingId(null)} />
+          <div className="confirm-dialog">
+            <h3>Удалить это блюдо?</h3>
+            <div className="confirm-actions">
+              <button
+                className="confirm-cancel"
+                onClick={() => setConfirmingId(null)}
+              >
+                Отмена
+              </button>
+              <button
+                className="confirm-delete"
+                onClick={async () => {
+                  await onMealDelete(confirmingId)
+                  setConfirmingId(null)
+                }}
+              >
+                Удалить
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }

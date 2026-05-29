@@ -78,6 +78,11 @@ jobs:
         run: |
           gsutil cors set cors.json gs://eatappmain-e7503.firebasestorage.app
 
+      - name: Grant Cloud Run SA storage access
+        run: |
+          PROJECT_NUMBER=$(gcloud projects describe eatappmain-e7503 --format='value(projectNumber)')
+          gsutil iam ch serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com:objectAdmin gs://eatappmain-e7503.firebasestorage.app
+
       - name: Build and Push Docker Image
         run: |
           gcloud auth configure-docker us-central1-docker.pkg.dev
