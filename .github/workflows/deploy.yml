@@ -7,6 +7,32 @@ on:
     branches: [main]
 
 jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    name: Detect Changed Files
+    outputs:
+      frontend: ${{ steps.changes.outputs.frontend }}
+      server: ${{ steps.changes.outputs.server }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect file changes
+        uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            frontend:
+              - 'src/**'
+              - 'index.html'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'vite.config.ts'
+              - 'tsconfig.json'
+              - 'public/**'
+            server:
+              - 'server/**'
+
   lint:
     runs-on: ubuntu-latest
     name: Lint & Type Check
@@ -31,9 +57,10 @@ jobs:
         run: npm list eslint >/dev/null 2>&1 && npm run lint || echo "eslint not configured"
 
   build-frontend:
+    needs: detect-changes
     runs-on: ubuntu-latest
     name: Build Frontend
-    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    if: needs.detect-changes.outputs.frontend == 'true'
 
     steps:
       - uses: actions/checkout@v4
@@ -65,12 +92,13 @@ jobs:
         with:
           name: dist
           path: dist/
-          retention-days: 1
+          retention-days: 7
 
   build-server:
+    needs: detect-changes
     runs-on: ubuntu-latest
     name: Build Server Dependencies
-    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    if: needs.detect-changes.outputs.server == 'true'
 
     steps:
       - uses: actions/checkout@v4
@@ -88,13 +116,13 @@ jobs:
         with:
           name: server-node_modules
           path: server/node_modules/
-          retention-days: 1
+          retention-days: 7
 
   deploy-frontend:
     needs: [build-frontend, lint]
     runs-on: ubuntu-latest
     name: Deploy Frontend
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.build-frontend.result != 'skipped'
 
     steps:
       - uses: actions/checkout@v4
@@ -112,7 +140,7 @@ jobs:
     needs: [build-server, lint]
     runs-on: ubuntu-latest
     name: Deploy Server
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.build-server.result != 'skipped'
 
     steps:
       - uses: actions/checkout@v4
@@ -163,13 +191,14 @@ jobs:
     needs: [deploy-frontend, deploy-server]
     runs-on: ubuntu-latest
     name: Verify Deployment Health
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && (needs.deploy-frontend.result != 'skipped' || needs.deploy-server.result != 'skipped')
 
     steps:
       - name: Wait for deployment to be ready
         run: sleep 10
 
       - name: Check Frontend Health
+        if: needs.deploy-frontend.result != 'skipped'
         run: |
           response=$(curl -s -o /dev/null -w "%{http_code}" https://eatappmain-e7503.firebaseapp.com/)
           if [ "$response" != "200" ]; then
@@ -179,6 +208,7 @@ jobs:
           echo "✅ Frontend is healthy (HTTP $response)"
 
       - name: Check Server API Health
+        if: needs.deploy-server.result != 'skipped'
         run: |
           response=$(curl -s -o /dev/null -w "%{http_code}" https://caloriesnap-api-xyz123.run.app/ 2>/dev/null || echo "503")
           echo "Server health check response: $response"
