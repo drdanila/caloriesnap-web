@@ -4,9 +4,21 @@ const Anthropic = require('@anthropic-ai/sdk');
 
 admin.initializeApp();
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || ''
-});
+let client;
+
+function getAnthropicClient() {
+  if (client) return client;
+
+  const config = functions.config();
+  const apiKey = config.anthropic?.api_key || process.env.ANTHROPIC_API_KEY;
+
+  if (!apiKey) {
+    throw new Error('ANTHROPIC_API_KEY not configured');
+  }
+
+  client = new Anthropic({ apiKey });
+  return client;
+}
 
 exports.analyzeMeal = functions.https.onRequest(async (req, res) => {
   res.set('Access-Control-Allow-Origin', '*');
@@ -37,7 +49,8 @@ exports.analyzeMeal = functions.https.onRequest(async (req, res) => {
       return;
     }
 
-    const validationMessage = await client.messages.create({
+    const anthropic = getAnthropicClient();
+    const validationMessage = await anthropic.messages.create({
       model: 'claude-3-5-sonnet-20241022',
       max_tokens: 100,
       messages: [
@@ -70,7 +83,7 @@ exports.analyzeMeal = functions.https.onRequest(async (req, res) => {
       return;
     }
 
-    const message = await client.messages.create({
+    const message = await anthropic.messages.create({
       model: 'claude-3-5-sonnet-20241022',
       max_tokens: 1024,
       messages: [
