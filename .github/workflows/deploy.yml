@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -34,34 +34,44 @@ jobs:
           VITE_API_URL: ${{ vars.VITE_API_URL }}
         run: npm run build
 
+  deploy-frontend:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
       - name: Deploy Frontend and Firestore Rules to Firebase
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: npx firebase-tools deploy --token ${{ secrets.FIREBASE_TOKEN }} --project eatappmain-e7503 --only hosting,firestore:rules,firestore:indexes
 
+  deploy-server:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
       - name: Authenticate to Google Cloud
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Setup Google Cloud SDK
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: google-github-actions/setup-gcloud@v2
 
       - name: Configure Storage CORS
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           gsutil cors set cors.json gs://eatappmain-e7503.firebasestorage.app
 
       - name: Build and Push Docker Image
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           gcloud auth configure-docker us-central1-docker.pkg.dev
           docker build -t us-central1-docker.pkg.dev/eatappmain-e7503/caloriesnap/caloriesnap-api:latest server/
           docker push us-central1-docker.pkg.dev/eatappmain-e7503/caloriesnap/caloriesnap-api:latest
 
       - name: Deploy to Cloud Run
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           gcloud run deploy caloriesnap-api \
             --image us-central1-docker.pkg.dev/eatappmain-e7503/caloriesnap/caloriesnap-api:latest \
