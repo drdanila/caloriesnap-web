@@ -182,28 +182,45 @@
 
 .bottom-nav {
   display: flex;
-  border-top: 1px solid #ddd;
+  gap: 8px;
+  padding: 8px 12px;
   background: white;
   position: sticky;
   bottom: 0;
+  border-top: 1px solid #eee;
 }
 
 .nav-item {
   flex: 1;
-  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 12px;
   border: none;
   background: none;
   cursor: pointer;
-  color: #aaa;
-  font-size: 14px;
+  color: #bbb;
+  border-radius: 20px;
+  transition: all 0.2s;
+}
+
+.nav-icon {
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-label {
+  font-size: 11px;
   font-weight: 600;
-  transition: color 0.2s, border-color 0.2s;
-  border-top: 3px solid transparent;
+  color: inherit;
 }
 
 .nav-item.active {
+  background: #e8f5ee;
   color: #2d8a5e;
-  border-top-color: #2d8a5e;
 }
 
 @media (max-width: 600px) {

@@ -82,18 +82,9 @@ export default function HistoryScreen({ meals, onMealDelete }: { meals: Meal[]; 
                     <h4 style={{ cursor: 'pointer' }}>{meal.dishName}</h4>
                     <span className="meal-time">{time}</span>
                   </div>
-                  <p className="meal-portion">{meal.portionSize}</p>
                   <p className="meal-macros">
-                    P: {meal.protein}g | F: {meal.fat}g | C: {meal.carbs}g
-                    {meal.fiber && ` | Fiber: ${meal.fiber}g`}
+                    P: {meal.protein}g · F: {meal.fat}g · C: {meal.carbs}g
                   </p>
-                  {meal.ingredients && meal.ingredients.length > 0 && (
-                    <p className="meal-ingredients">
-                      {meal.ingredients.slice(0, 3).join(', ')}
-                      {meal.ingredients.length > 3 && ` +${meal.ingredients.length - 3}`}
-                    </p>
-                  )}
-                  {meal.notes && <p className="meal-notes">📝 {meal.notes}</p>}
                   <div className="confidence-bar-wrap">
                     <div className="confidence-bar">
                       <div
@@ -104,13 +95,7 @@ export default function HistoryScreen({ meals, onMealDelete }: { meals: Meal[]; 
                         }}
                       />
                     </div>
-                    <span className="confidence-label">
-                      {meal.confidence >= 80 ? 'Высокая' : meal.confidence >= 60 ? 'Средняя' : 'Низкая'} точность ({meal.confidence}%)
-                    </span>
                   </div>
-                  {meal.confidence < 70 && (
-                    <p className="confidence-hint">Калорийность может отличаться из-за неполной видимости блюда</p>
-                  )}
                 </div>
               </div>
             )

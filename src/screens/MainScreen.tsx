@@ -100,12 +100,12 @@ export default function MainScreen({ user }: { user: User }) {
             <h2>Today's Calories</h2>
             <div className="calories-display">
               <span className="calories-number">{totalCalories}</span>
-              <span className="calories-goal">/ 2000 kcal</span>
+              <span className="calories-goal">/ 1800 kcal</span>
             </div>
             <div className="progress-bar">
               <div
                 className="progress-fill"
-                style={{ width: `${Math.min((totalCalories / 2000) * 100, 100)}%` }}
+                style={{ width: `${Math.min((totalCalories / 1800) * 100, 100)}%` }}
               ></div>
             </div>
             <p className="meal-count">{todayMeals.length} meals logged today</p>
@@ -187,13 +187,15 @@ export default function MainScreen({ user }: { user: User }) {
           className={`nav-item ${activeTab === 'home' ? 'active' : ''}`}
           onClick={() => setActiveTab('home')}
         >
-          🏠 Home
+          <span className="nav-icon">🏠</span>
+          <span className="nav-label">Главная</span>
         </button>
         <button
           className={`nav-item ${activeTab === 'history' ? 'active' : ''}`}
           onClick={() => setActiveTab('history')}
         >
-          📋 History
+          <span className="nav-icon">📅</span>
+          <span className="nav-label">История</span>
         </button>
       </nav>
     </div>

@@ -218,6 +218,7 @@
 .meal-details {
   flex: 1;
   min-width: 0;
+  padding-right: 36px;
 }
 
 .meal-header {
@@ -233,6 +234,9 @@
   font-size: 16px;
   color: #2d2d2d;
   word-break: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .meal-time {
@@ -248,54 +252,26 @@
 }
 
 .meal-macros {
-  margin: 4px 0 0 0;
-  font-size: 12px;
-  color: #666;
-  font-weight: 500;
-}
-
-.meal-ingredients {
-  margin: 4px 0 0 0;
-  font-size: 12px;
-  color: #7cc9a8;
-  word-break: break-word;
-}
-
-.meal-notes {
-  margin: 4px 0 0 0;
-  font-size: 12px;
-  color: #666;
-  font-style: italic;
+  margin: 2px 0 4px 0;
+  font-size: 11px;
+  color: #999;
 }
 
 .confidence-bar-wrap {
-  margin-top: 6px;
+  margin-top: 2px;
 }
 
 .confidence-bar {
-  height: 4px;
-  background: #f0f0f0;
-  border-radius: 2px;
-  margin-bottom: 4px;
+  height: 2px;
+  background: #e0e0e0;
+  border-radius: 1px;
   overflow: hidden;
 }
 
 .confidence-fill {
   height: 100%;
-  border-radius: 2px;
+  border-radius: 1px;
   transition: width 0.3s;
-}
-
-.confidence-label {
-  font-size: 11px;
-  color: #888;
-}
-
-.confidence-hint {
-  font-size: 11px;
-  color: #f39c12;
-  margin: 2px 0 0 0;
-  font-style: italic;
 }
 
 .confidence-level {
