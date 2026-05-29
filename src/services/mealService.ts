@@ -28,9 +28,11 @@ export interface Meal {
 export async function analyzeMealImage(imageFile: File, userId: string) {
   const base64 = await fileToBase64(imageFile)
 
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080'
+
   try {
     const response = await fetch(
-      'https://us-central1-eatappmain-e7503.cloudfunctions.net/analyzeMeal',
+      `${apiUrl}/analyze`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

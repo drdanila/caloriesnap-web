@@ -1,57 +1,34 @@
-const functions = require('firebase-functions');
-const admin = require('firebase-admin');
+const express = require('express');
 const Anthropic = require('@anthropic-ai/sdk');
 
-admin.initializeApp();
+const app = express();
+app.use(express.json({ limit: '50mb' }));
 
-let client;
+const client = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+});
 
-function getAnthropicClient() {
-  if (client) return client;
-
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-
-  if (!apiKey) {
-    throw new Error('ANTHROPIC_API_KEY not configured');
-  }
-
-  client = new Anthropic({ apiKey });
-  return client;
-}
-
-exports.analyzeMeal = functions
-  .runWith({ memory: '512MB', timeoutSeconds: 120 })
-  .https.onRequest(async (req, res) => {
+app.post('/analyze', async (req, res) => {
   res.set('Access-Control-Allow-Origin', '*');
-  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.set('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') {
-    res.status(204).send('');
-    return;
-  }
-
-  if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method not allowed' });
-    return;
-  }
 
   try {
     const { imageBase64, userId, mimeType } = req.body;
 
     if (!imageBase64 || !userId) {
-      res.status(400).json({ error: 'Missing imageBase64 or userId' });
-      return;
+      return res.status(400).json({ error: 'Missing imageBase64 or userId' });
+    }
+
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' });
     }
 
     const mediaType = mimeType || 'image/jpeg';
     if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(mediaType)) {
-      res.status(400).json({ error: 'Unsupported image format' });
-      return;
+      return res.status(400).json({ error: 'Unsupported image format' });
     }
 
-    const anthropic = getAnthropicClient();
-    const validationMessage = await anthropic.messages.create({
+    // Validate it's a food image
+    const validationMessage = await client.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 100,
       messages: [
@@ -77,14 +54,14 @@ exports.analyzeMeal = functions
 
     const isFood = validationMessage.content[0]?.text?.toLowerCase().includes('yes');
     if (!isFood) {
-      res.status(400).json({
+      return res.status(400).json({
         error: 'Not a food image',
-        message: 'Please upload a photo of food or a prepared meal. The image should show actual food items or a dish.',
+        message: 'Please upload a photo of food or a prepared meal.',
       });
-      return;
     }
 
-    const message = await anthropic.messages.create({
+    // Analyze nutrition
+    const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 1024,
       messages: [
@@ -135,21 +112,17 @@ Be conservative with estimates - better to slightly overestimate calories.`
 
     const textContent = message.content.find(block => block.type === 'text');
     if (!textContent) {
-      throw new Error('No text response from Claude');
+      return res.status(500).json({ error: 'No text response from Claude' });
     }
 
     let nutritionData;
     try {
       nutritionData = JSON.parse(textContent.text);
     } catch (e) {
-      res.status(500).json({ error: 'Failed to parse nutrition data', details: e.message });
-      return;
+      return res.status(500).json({ error: 'Failed to parse nutrition data', details: e.message });
     }
 
-    res.json({
-      success: true,
-      data: nutritionData
-    });
+    res.json(nutritionData);
 
   } catch (error) {
     console.error('Error analyzing meal:', error);
@@ -158,4 +131,16 @@ Be conservative with estimates - better to slightly overestimate calories.`
       details: error.message
     });
   }
+});
+
+app.options('*', (req, res) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type');
+  res.sendStatus(204);
+});
+
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
