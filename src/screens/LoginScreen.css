@@ -56,6 +56,14 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.google-icon {
+  flex-shrink: 0;
 }
 
 .signin-button:hover:not(:disabled) {

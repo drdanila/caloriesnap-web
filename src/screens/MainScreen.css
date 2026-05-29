@@ -8,7 +8,7 @@
 .header {
   background: linear-gradient(135deg, #a8d5ba 0%, #7cc9a8 100%);
   color: white;
-  padding: 16px 20px;
+  padding: 10px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -16,7 +16,7 @@
 }
 
 .header h1 {
-  font-size: 24px;
+  font-size: 18px;
   margin: 0;
 }
 
@@ -34,7 +34,7 @@
   background: rgba(255, 255, 255, 0.2);
   color: white;
   border: 1px solid white;
-  padding: 8px 16px;
+  padding: 5px 10px;
   border-radius: 6px;
   cursor: pointer;
   font-size: 12px;
