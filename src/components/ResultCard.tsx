@@ -51,11 +51,9 @@ export function ResultCard({ result, imageUrl, onClose }: ResultCardProps) {
           </div>
         </div>
 
-        {result.fiber && (
-          <div className="result-fiber">
-            🌾 Fiber: {result.fiber}g
-          </div>
-        )}
+        <div className="result-fiber">
+          🌾 Fiber: {result.fiber}g
+        </div>
 
         <div className="result-portion">
           📏 Portion: {result.portionSize}
