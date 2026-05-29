@@ -120,7 +120,15 @@ Be conservative with estimates - better to slightly overestimate calories.`
 
     let nutritionData;
     try {
-      nutritionData = JSON.parse(textContent.text);
+      let jsonText = textContent.text.trim();
+
+      // Extract JSON from markdown code block if present
+      const jsonMatch = jsonText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+      if (jsonMatch) {
+        jsonText = jsonMatch[1].trim();
+      }
+
+      nutritionData = JSON.parse(jsonText);
     } catch (e) {
       console.error('JSON parse error:', e.message);
       console.error('Attempted to parse:', textContent.text);
