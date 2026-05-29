@@ -19,7 +19,9 @@ function getAnthropicClient() {
   return client;
 }
 
-exports.analyzeMeal = functions.https.onRequest(async (req, res) => {
+exports.analyzeMeal = functions
+  .runWith({ memory: '512MB', timeoutSeconds: 120 })
+  .https.onRequest(async (req, res) => {
   res.set('Access-Control-Allow-Origin', '*');
   res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.set('Access-Control-Allow-Headers', 'Content-Type');
