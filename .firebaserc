@@ -3,17 +3,5 @@
     "default": "eatappmain-e7503",
     "prod": "eatappmain-e7503",
     "staging": "caloriesnap-staging"
-  },
-  "targets": {
-    "eatappmain-e7503": {
-      "hosting": {
-        "app": ["eatappmain-e7503", "caloriesnapapp"]
-      }
-    },
-    "caloriesnap-staging": {
-      "hosting": {
-        "app": ["caloriesnap-staging"]
-      }
-    }
   }
 }

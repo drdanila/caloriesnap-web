@@ -77,6 +77,12 @@ jobs:
       - name: Deploy to Firebase
         run: npx firebase-tools deploy --force --project ${{ vars.FIREBASE_PROJECT }} --only hosting,firestore:rules,firestore:indexes,storage
 
+      # Prod also serves the branded free domain caloriesnapapp.web.app (a second
+      # Hosting site in the prod project). Same build, deployed via a separate config.
+      - name: Deploy branded alias site (prod only)
+        if: github.event_name == 'push'
+        run: npx firebase-tools deploy --force --project ${{ vars.FIREBASE_PROJECT }} --only hosting --config firebase.alias.json
+
   server-deploy:
     needs: [lint]
     runs-on: ubuntu-latest

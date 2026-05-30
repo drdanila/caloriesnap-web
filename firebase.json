@@ -6,17 +6,14 @@
   "storage": {
     "rules": "storage.rules"
   },
-  "hosting": [
-    {
-      "target": "app",
-      "public": "web/dist",
-      "ignore": ["firebase.json", "**/.*", "node_modules"],
-      "rewrites": [
-        {
-          "source": "**",
-          "destination": "/index.html"
-        }
-      ]
-    }
-  ]
+  "hosting": {
+    "public": "web/dist",
+    "ignore": ["firebase.json", "**/.*", "node_modules"],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
 }
