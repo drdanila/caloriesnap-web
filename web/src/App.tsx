@@ -10,13 +10,19 @@ function App() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Завершаем вход через редирект (мобильные/iOS), затем слушаем авторизацию.
-    completeRedirectSignIn()
-    const unsubscribe = onAuthChange((authUser) => {
-      setUser(authUser)
-      setLoading(false)
+    let unsubscribe: (() => void) | undefined
+
+    // Сначала завершаем вход через редирект (мобильные/iOS), только потом
+    // слушаем авторизацию — иначе onAuthStateChanged срабатывает с null
+    // раньше, чем getRedirectResult обработает токен.
+    completeRedirectSignIn().finally(() => {
+      unsubscribe = onAuthChange((authUser) => {
+        setUser(authUser)
+        setLoading(false)
+      })
     })
-    return unsubscribe
+
+    return () => unsubscribe?.()
   }, [])
 
   if (loading) {

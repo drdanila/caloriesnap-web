@@ -62,9 +62,13 @@ export async function signInWithGoogle() {
 // Завершает вход через редирект (вызывается при загрузке приложения).
 export async function completeRedirectSignIn() {
   try {
-    return await getRedirectResult(auth)
-  } catch (error) {
-    console.error('Redirect sign-in error:', error)
+    const result = await getRedirectResult(auth)
+    if (result) {
+      console.log('[auth] redirect sign-in completed, user:', result.user.email)
+    }
+    return result
+  } catch (error: any) {
+    console.error('[auth] redirect sign-in error:', error?.code, error?.message)
     return null
   }
 }
