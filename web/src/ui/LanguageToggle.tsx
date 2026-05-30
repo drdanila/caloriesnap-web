@@ -3,8 +3,8 @@ import { Lang } from '../i18n/dictionaries'
 import './LanguageToggle.css'
 
 const OPTIONS: { value: Lang; flag: string; label: string }[] = [
-  { value: 'ru', flag: '🇷🇺', label: 'Русский' },
   { value: 'en', flag: '🇬🇧', label: 'English' },
+  { value: 'ru', flag: '🇷🇺', label: 'Русский' },
 ]
 
 /** Compact flag switch — sits on the mint app header next to the sign-out button. */
