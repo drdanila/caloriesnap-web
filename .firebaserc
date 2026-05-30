@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "eatappmain-e7503"
+    "default": "eatappmain-e7503",
+    "prod": "eatappmain-e7503",
+    "staging": "caloriesnap-staging"
   }
 }

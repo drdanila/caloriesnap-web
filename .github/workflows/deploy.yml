@@ -1,10 +1,17 @@
-name: Deploy to Firebase Hosting & Cloud Run
+name: Deploy (PR → staging, main → prod)
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+
+# Pick the target environment from the trigger: push→main deploys prod,
+# any PR deploys staging. The job's `environment:` selects which set of
+# secrets/vars (production vs staging) gets injected.
+concurrency:
+  group: deploy-${{ github.event_name == 'push' && 'production' || format('staging-pr-{0}', github.event.pull_request.number) }}
+  cancel-in-progress: true
 
 jobs:
   lint:
@@ -14,23 +21,18 @@ jobs:
     defaults:
       run:
         working-directory: web
-
     steps:
       - uses: actions/checkout@v4
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'npm'
           cache-dependency-path: web/package-lock.json
-
       - name: Install dependencies
         run: npm ci
-
       - name: TypeScript Check
         run: npm run build -- --noEmit 2>/dev/null || tsc --noEmit
-
       - name: Check for lint issues (if eslint exists)
         run: npm list eslint >/dev/null 2>&1 && npm run lint || echo "eslint not configured"
 
@@ -38,8 +40,8 @@ jobs:
     needs: [lint]
     runs-on: ubuntu-latest
     name: Deploy Frontend
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     timeout-minutes: 15
+    environment: ${{ github.event_name == 'push' && 'production' || 'staging' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -73,14 +75,14 @@ jobs:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Deploy to Firebase
-        run: npx firebase-tools deploy --force --project eatappmain-e7503 --only hosting,firestore:rules,firestore:indexes
+        run: npx firebase-tools deploy --force --project ${{ vars.FIREBASE_PROJECT }} --only hosting,firestore:rules,firestore:indexes,storage
 
   server-deploy:
     needs: [lint]
     runs-on: ubuntu-latest
     name: Deploy Server
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     timeout-minutes: 20
+    environment: ${{ github.event_name == 'push' && 'production' || 'staging' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -94,7 +96,7 @@ jobs:
         uses: docker/setup-buildx-action@v3.2.0
 
       - name: Configure Docker registry auth
-        run: gcloud auth configure-docker us-central1-docker.pkg.dev
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v6
@@ -102,16 +104,15 @@ jobs:
           context: server/
           push: true
           tags: |
-            us-central1-docker.pkg.dev/eatappmain-e7503/caloriesnap/caloriesnap-api:latest
-            us-central1-docker.pkg.dev/eatappmain-e7503/caloriesnap/caloriesnap-api:${{ github.sha }}
+            us-central1-docker.pkg.dev/${{ vars.FIREBASE_PROJECT }}/caloriesnap/caloriesnap-api:latest
+            us-central1-docker.pkg.dev/${{ vars.FIREBASE_PROJECT }}/caloriesnap/caloriesnap-api:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Deploy to Cloud Run
-        id: deploy
         run: |
-          SERVICE_URL=$(gcloud run deploy caloriesnap-api \
-            --image us-central1-docker.pkg.dev/eatappmain-e7503/caloriesnap/caloriesnap-api:${{ github.sha }} \
+          gcloud run deploy caloriesnap-api \
+            --image us-central1-docker.pkg.dev/${{ vars.FIREBASE_PROJECT }}/caloriesnap/caloriesnap-api:${{ github.sha }} \
             --platform managed \
             --region us-central1 \
             --cpu 1 \
@@ -119,8 +120,6 @@ jobs:
             --min-instances 0 \
             --max-instances 5 \
             --concurrency 80 \
-            --set-env-vars ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }} \
+            --set-env-vars ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }},STORAGE_BUCKET=${{ vars.STORAGE_BUCKET }} \
             --allow-unauthenticated \
-            --project eatappmain-e7503 \
-            --format='value(status.url)')
-          echo "server_url=${SERVICE_URL}" >> $GITHUB_OUTPUT
+            --project ${{ vars.FIREBASE_PROJECT }}

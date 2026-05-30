@@ -63,16 +63,36 @@ VITE_FIREBASE_APP_ID=
 VITE_API_URL=            # URL of the Cloud Run API (defaults to localhost:8080)
 ```
 
-The server needs `ANTHROPIC_API_KEY` (set as a Cloud Run env var / GitHub Secret).
+The server needs `ANTHROPIC_API_KEY` and `STORAGE_BUCKET` (set as Cloud Run env
+vars by CI; `STORAGE_BUCKET` falls back to the prod bucket if unset).
+
+## Environments
+
+Two isolated Firebase projects, each with its own Firestore/Auth/Storage/Hosting
+and Cloud Run service:
+
+| Env | Firebase project | Used for |
+|-----|------------------|----------|
+| **prod** | `eatappmain-e7503` | stable app, real users |
+| **staging** | `caloriesnap-staging` | testing changes before prod |
+
+Per-environment config lives in **GitHub Environments** (`production` / `staging`)
+as secrets/variables; `.firebaserc` maps the `prod`/`staging` aliases.
 
 ## Deploy
 
-CI deploys automatically on push to `main` (see `.github/workflows/deploy.yml`):
-the frontend goes to Firebase Hosting and the server to Cloud Run.
+CI (see `.github/workflows/deploy.yml`):
 
-Manual frontend deploy from repo root:
+- **Open/update a PR → deploys to staging.**
+- **Merge to `main` → deploys to prod.**
+
+Each run builds the frontend with that environment's Firebase config, deploys
+Hosting + Firestore/Storage rules, builds & pushes the server image, and deploys
+Cloud Run.
+
+Manual single-project deploy from repo root:
 ```bash
-npm run deploy   # builds web/ and deploys hosting + firestore rules/indexes
+firebase deploy --project staging --only hosting,firestore:rules,firestore:indexes,storage
 ```
 
 ## Architecture

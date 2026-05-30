@@ -10,8 +10,10 @@ const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
+// Storage bucket is environment-specific (prod vs staging); falls back to prod.
+const STORAGE_BUCKET = process.env.STORAGE_BUCKET || 'eatappmain-e7503.firebasestorage.app';
 admin.initializeApp({
-  storageBucket: 'eatappmain-e7503.firebasestorage.app'
+  storageBucket: STORAGE_BUCKET
 });
 const bucket = admin.storage().bucket();
 
@@ -180,7 +182,7 @@ IMPORTANT: Respond in Russian language. All text fields (dishName, portionSize, 
         }
       });
 
-      imageUrl = `https://firebasestorage.googleapis.com/v0/b/eatappmain-e7503.firebasestorage.app/o/${encodeURIComponent(fileName)}?alt=media&token=${token}`;
+      imageUrl = `https://firebasestorage.googleapis.com/v0/b/${STORAGE_BUCKET}/o/${encodeURIComponent(fileName)}?alt=media&token=${token}`;
     } catch (uploadErr) {
       console.warn('Image upload failed:', uploadErr.message);
     }
