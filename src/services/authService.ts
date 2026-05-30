@@ -2,6 +2,7 @@ import { auth } from '../config/firebase'
 import {
   GoogleAuthProvider,
   signInWithPopup,
+  signInAnonymously,
   signOut as firebaseSignOut,
   onAuthStateChanged,
   User
@@ -32,6 +33,15 @@ export async function signInWithGoogle() {
     })
     throw error
   }
+}
+
+// Dev-only: вход без Google через анонимную авторизацию Firebase.
+// Даёт реальный auth-токен, поэтому правила Firestore работают как обычно.
+export async function signInDev() {
+  if (!import.meta.env.DEV) {
+    throw new Error('Dev sign-in is only available in development')
+  }
+  return signInAnonymously(auth)
 }
 
 export async function signOut() {

@@ -64,6 +64,130 @@
   background: rgba(255, 255, 255, 0.3);
 }
 
+.profile-icon-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid white;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 4px 8px;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.profile-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.profile-prompt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #e8f5ee;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: #2d8a5e;
+}
+
+.profile-prompt button {
+  background: linear-gradient(135deg, #3fa876 0%, #2d8a5e 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.macro-targets {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+  background: white;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.macro-ring {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.ring-wrap {
+  position: relative;
+  width: 64px;
+  height: 64px;
+}
+
+.ring-track {
+  fill: none;
+  stroke: #e0e0e0;
+  stroke-width: 6;
+}
+
+.ring-fill {
+  fill: none;
+  stroke: #7cc9a8;
+  stroke-width: 6;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.3s;
+}
+
+.ring-value {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: bold;
+  color: #2d2d2d;
+}
+
+.macro-ring-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+  margin-top: 4px;
+}
+
+.macro-ring-goal {
+  font-size: 11px;
+  color: #999;
+}
+
+.macro-ring.exceeded .ring-fill {
+  stroke: #ff4d4d;
+}
+
+.macro-ring.exceeded .ring-value {
+  color: #e74c3c;
+}
+
+.calories-card.exceeded .calories-goal {
+  color: #e74c3c;
+}
+
+.calories-card.exceeded {
+  border: 1.5px solid #e74c3c;
+}
+
+.calories-card.exceeded .progress-fill {
+  background: #ff4d4d;
+}
+
 .home-screen {
   flex: 1;
   padding: 20px;
@@ -263,6 +387,10 @@
 
   .action-buttons {
     grid-template-columns: 1fr;
+  }
+
+  .macro-targets {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 

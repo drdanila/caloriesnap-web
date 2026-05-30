@@ -76,3 +76,27 @@
   opacity: 0.7;
   cursor: not-allowed;
 }
+
+.dev-signin-button {
+  width: 100%;
+  margin-top: 12px;
+  padding: 12px;
+  background: transparent;
+  color: #888;
+  border: 1.5px dashed #bbb;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.dev-signin-button:hover:not(:disabled) {
+  background: #f0f2f0;
+  color: #555;
+}
+
+.dev-signin-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}

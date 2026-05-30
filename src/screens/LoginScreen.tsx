@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { signInWithGoogle } from '../services/authService'
+import { signInWithGoogle, signInDev } from '../services/authService'
 import { useInstallPrompt } from '../hooks/useInstallPrompt'
 import InstallBanner from '../components/InstallBanner'
 import './LoginScreen.css'
@@ -15,6 +15,18 @@ export default function LoginScreen() {
     } catch (error) {
       console.error('Sign in error:', error)
       alert('Failed to sign in. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDevSignIn = async () => {
+    try {
+      setLoading(true)
+      await signInDev()
+    } catch (error) {
+      console.error('Dev sign in error:', error)
+      alert('Dev sign-in failed. Включите Anonymous Auth в Firebase Console.')
     } finally {
       setLoading(false)
     }
@@ -45,6 +57,12 @@ export default function LoginScreen() {
           </svg>
           {loading ? 'Входим...' : 'Войти через Google'}
         </button>
+
+        {import.meta.env.DEV && (
+          <button onClick={handleDevSignIn} disabled={loading} className="dev-signin-button">
+            🔧 Dev вход (без Google)
+          </button>
+        )}
 
         {showBanner && <InstallBanner isIOS={isIOS} onInstall={install} onDismiss={dismiss} />}
       </div>

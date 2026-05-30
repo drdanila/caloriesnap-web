@@ -2,16 +2,26 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { User } from 'firebase/auth'
 import { signOut } from '../services/authService'
 import { analyzeMealImage, fetchUserMeals, Meal, saveMeal, deleteMeal } from '../services/mealService'
+import {
+  getUserProfile,
+  calculateTargets,
+  UserProfile,
+  NutritionTargets,
+} from '../services/profileService'
 import { ResultCard } from '../components/ResultCard'
 import { Toast } from '../components/Toast'
 import './MainScreen.css'
 
 const HistoryScreen = lazy(() => import('./HistoryScreen'))
+const ProfileScreen = lazy(() => import('./ProfileScreen'))
+
+const DEFAULT_TARGETS: NutritionTargets = { calories: 1800, protein: 90, fat: 50, carbs: 225 }
 
 export default function MainScreen({ user }: { user: User }) {
   const [meals, setMeals] = useState<Meal[]>([])
+  const [profile, setProfile] = useState<UserProfile | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
-  const [activeTab, setActiveTab] = useState<'home' | 'history'>('home')
+  const [activeTab, setActiveTab] = useState<'home' | 'history' | 'profile'>('home')
   const [result, setResult] = useState<Omit<Meal, 'id' | 'userId' | 'createdAt'> | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [currentFile, setCurrentFile] = useState<File | null>(null)
@@ -20,6 +30,7 @@ export default function MainScreen({ user }: { user: User }) {
 
   useEffect(() => {
     loadMeals()
+    loadProfile()
   }, [])
 
   const loadMeals = async () => {
@@ -29,6 +40,15 @@ export default function MainScreen({ user }: { user: User }) {
       setMeals(userMeals)
     } catch (error) {
       console.error('Failed to load meals:', error)
+    }
+  }
+
+  const loadProfile = async () => {
+    if (!user.uid) return
+    try {
+      setProfile(await getUserProfile(user.uid))
+    } catch (error) {
+      console.error('Failed to load profile:', error)
     }
   }
 
@@ -80,7 +100,23 @@ export default function MainScreen({ user }: { user: User }) {
     return new Date(meal.createdAt).toDateString() === today
   })
 
-  const totalCalories = todayMeals.reduce((sum, meal) => sum + meal.calories, 0)
+  const totals = todayMeals.reduce(
+    (acc, meal) => ({
+      calories: acc.calories + (meal.calories || 0),
+      protein: acc.protein + (meal.protein || 0),
+      fat: acc.fat + (meal.fat || 0),
+      carbs: acc.carbs + (meal.carbs || 0),
+    }),
+    { calories: 0, protein: 0, fat: 0, carbs: 0 }
+  )
+
+  const targets = profile ? calculateTargets(profile) : DEFAULT_TARGETS
+
+  const metrics = [
+    { key: 'protein', label: 'Белки', unit: 'г', value: totals.protein, goal: targets.protein },
+    { key: 'fat', label: 'Жиры', unit: 'г', value: totals.fat, goal: targets.fat },
+    { key: 'carbs', label: 'Углеводы', unit: 'г', value: totals.carbs, goal: targets.carbs },
+  ]
 
   return (
     <div className="main-container">
@@ -91,6 +127,14 @@ export default function MainScreen({ user }: { user: User }) {
         </div>
         <div className="header-actions">
           <span className="user-name">Hi, {user.displayName?.split(' ')[0]}</span>
+          <button
+            onClick={() => setActiveTab('profile')}
+            className="profile-icon-btn"
+            aria-label="Профиль"
+            title="Профиль"
+          >
+            👤
+          </button>
           <button onClick={handleSignOut} className="signout-btn">
             Sign Out
           </button>
@@ -99,19 +143,60 @@ export default function MainScreen({ user }: { user: User }) {
 
       {activeTab === 'home' ? (
         <div className="home-screen">
-          <div className="calories-card">
-            <h2>Today's Calories</h2>
+          {!profile && (
+            <div className="profile-prompt">
+              <span>Заполните профиль для персональных целей</span>
+              <button onClick={() => setActiveTab('profile')}>Заполнить</button>
+            </div>
+          )}
+
+          <div className={`calories-card${totals.calories > targets.calories ? ' exceeded' : ''}`}>
+            <h2>Калории за сегодня</h2>
             <div className="calories-display">
-              <span className="calories-number">{totalCalories}</span>
-              <span className="calories-goal">/ 1800 kcal</span>
+              <span className="calories-number">{Math.round(totals.calories)}</span>
+              <span className="calories-goal">/ {targets.calories} ккал</span>
             </div>
             <div className="progress-bar">
               <div
                 className="progress-fill"
-                style={{ width: `${Math.min((totalCalories / 1800) * 100, 100)}%` }}
+                style={{
+                  width: `${targets.calories > 0 ? Math.min((totals.calories / targets.calories) * 100, 100) : 0}%`,
+                }}
               ></div>
             </div>
-            <p className="meal-count">{todayMeals.length} meals logged today</p>
+            <p className="meal-count">{todayMeals.length} блюд за сегодня</p>
+          </div>
+
+          <div className="macro-targets">
+            {metrics.map((m) => {
+              const exceeded = m.value > m.goal
+              const pct = m.goal > 0 ? Math.min(m.value / m.goal, 1) : 0
+              const radius = 26
+              const circumference = 2 * Math.PI * radius
+              return (
+                <div key={m.key} className={`macro-ring${exceeded ? ' exceeded' : ''}`}>
+                  <div className="ring-wrap">
+                    <svg width="64" height="64" viewBox="0 0 64 64">
+                      <circle className="ring-track" cx="32" cy="32" r={radius} />
+                      <circle
+                        className="ring-fill"
+                        cx="32"
+                        cy="32"
+                        r={radius}
+                        strokeDasharray={circumference}
+                        strokeDashoffset={circumference * (1 - pct)}
+                        transform="rotate(-90 32 32)"
+                      />
+                    </svg>
+                    <span className="ring-value">{Math.round(m.value)}</span>
+                  </div>
+                  <span className="macro-ring-label">{m.label}</span>
+                  <span className="macro-ring-goal">
+                    / {m.goal} {m.unit}
+                  </span>
+                </div>
+              )
+            })}
           </div>
 
           <div className="action-buttons">
@@ -153,7 +238,7 @@ export default function MainScreen({ user }: { user: User }) {
             style={{ display: 'none' }}
           />
         </div>
-      ) : (
+      ) : activeTab === 'history' ? (
         <Suspense fallback={<div className="loading-fallback">Loading history...</div>}>
           <HistoryScreen
             meals={meals}
@@ -161,6 +246,15 @@ export default function MainScreen({ user }: { user: User }) {
               await deleteMeal(id)
               await loadMeals()
             }}
+          />
+        </Suspense>
+      ) : (
+        <Suspense fallback={<div className="loading-fallback">Загрузка...</div>}>
+          <ProfileScreen
+            userId={user.uid}
+            initialProfile={profile}
+            onSaved={(p) => setProfile(p)}
+            onBack={() => setActiveTab('home')}
           />
         </Suspense>
       )}
