@@ -66,7 +66,10 @@ export async function analyzeMealImage(imageFile: File, userId: string) {
         body: JSON.stringify({
           imageBase64: base64,
           userId,
-          mimeType: imageFile.type,
+          // compressImage всегда перекодирует в JPEG, поэтому шлём image/jpeg,
+          // а не оригинальный imageFile.type (webp/png/heic) — иначе Claude
+          // отклоняет запрос с 400 (media_type не совпадает с байтами).
+          mimeType: 'image/jpeg',
         })
       }
     )
