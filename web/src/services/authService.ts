@@ -15,18 +15,14 @@ googleProvider.setCustomParameters({
   prompt: 'select_account'
 })
 
-// На мобильных (особенно iOS Safari и в режиме PWA standalone) signInWithPopup
-// блокируется/не работает — там используем редирект.
-function isMobile() {
-  if (typeof navigator === 'undefined') return false
-  const ua = navigator.userAgent || ''
-  const iOS = /iPad|iPhone|iPod/.test(ua) ||
-    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
-  const android = /Android/i.test(ua)
-  const standalone =
-    window.matchMedia?.('(display-mode: standalone)').matches ||
+// Установленное PWA (standalone): popup открывается во внешнем браузере и не
+// может вернуть результат в контекст приложения — там нужен redirect.
+function isStandalonePWA() {
+  if (typeof window === 'undefined') return false
+  return (
+    window.matchMedia?.('(display-mode: standalone)').matches === true ||
     (navigator as any).standalone === true
-  return iOS || android || standalone
+  )
 }
 
 export async function signInWithGoogle() {
@@ -34,7 +30,11 @@ export async function signInWithGoogle() {
     throw new Error('Firebase auth is not initialized')
   }
 
-  if (isMobile()) {
+  // В обычной вкладке (включая мобильный Safari/Chrome) popup надёжнее: у него
+  // нет зависимости от sessionStorage через полный редирект, поэтому он не
+  // ловит auth/missing-initial-state на iOS Safari. Redirect используем только
+  // в standalone-PWA, где popup не вернёт результат.
+  if (isStandalonePWA()) {
     return signInWithRedirect(auth, googleProvider)
   }
 
