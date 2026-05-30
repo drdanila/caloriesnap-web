@@ -1,107 +1,57 @@
-.login-container {
+.login-screen {
   min-height: 100vh;
-  background: linear-gradient(135deg, #a8d5ba 0%, #f0f9f7 100%);
+  background: linear-gradient(160deg, var(--c-mint) 0%, #f0f9f7 60%);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: var(--s-5);
 }
 
-.login-content {
-  background: white;
-  border-radius: 20px;
-  padding: 40px 30px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+.login-card {
+  width: 100%;
   max-width: 400px;
   text-align: center;
 }
 
-.logo {
-  font-size: 60px;
-  margin-bottom: 20px;
+.login-logo {
+  font-size: 64px;
+  margin-bottom: var(--s-3);
 }
 
-.login-content h1 {
-  font-size: 32px;
-  color: #2d2d2d;
-  margin-bottom: 10px;
+.login-title {
+  font-size: var(--fs-3xl);
+  font-weight: var(--fw-bold);
+  color: var(--c-text);
+  margin-bottom: var(--s-2);
 }
 
-.tagline {
-  color: #666;
-  font-size: 16px;
-  margin-bottom: 30px;
+.login-tagline {
+  color: var(--c-text-2);
+  font-size: var(--fs-md);
+  margin-bottom: var(--s-6);
 }
 
-.features {
+.login-features {
   list-style: none;
-  margin-bottom: 30px;
   text-align: left;
+  margin-bottom: var(--s-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
 }
 
-.features li {
-  padding: 10px 0;
-  color: #555;
-  font-size: 14px;
-}
-
-.signin-button {
-  width: 100%;
-  padding: 14px;
-  background: linear-gradient(135deg, #2d8a5e 0%, #1e6b45 100%);
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
+.login-features li {
   display: flex;
   align-items: center;
-  justify-content: center;
-  white-space: nowrap;
+  gap: var(--s-3);
+  font-size: var(--fs-sm);
+  color: var(--c-text-2);
 }
 
-.google-icon {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-  /* margin вместо flex gap: gap не поддерживается в Safari < 14.1 (iOS),
-     там иконка наезжала на текст */
-  margin-right: 10px;
+.login-feature-emoji {
+  font-size: var(--fs-xl);
 }
 
-.signin-button:hover:not(:disabled) {
-  transform: translateY(-2px);
-  background: linear-gradient(135deg, #267550 0%, #195a3a 100%);
-  box-shadow: 0 6px 20px rgba(45, 138, 94, 0.4);
-}
-
-.signin-button:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.dev-signin-button {
-  width: 100%;
-  margin-top: 12px;
-  padding: 12px;
-  background: transparent;
-  color: #888;
-  border: 1.5px dashed #bbb;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.dev-signin-button:hover:not(:disabled) {
-  background: #f0f2f0;
-  color: #555;
-}
-
-.dev-signin-button:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
+.login-dev {
+  margin-top: var(--s-2);
 }

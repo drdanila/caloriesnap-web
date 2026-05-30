@@ -21,11 +21,14 @@ app.post('/analyze', async (req, res) => {
   res.set('Access-Control-Allow-Origin', '*');
 
   try {
-    const { imageBase64, userId, mimeType } = req.body;
+    const { imageBase64, userId, mimeType, locale } = req.body;
 
     if (!imageBase64 || !userId) {
       return res.status(400).json({ error: 'Missing imageBase64 or userId' });
     }
+
+    // Language for the AI's text fields; defaults to Russian for back-compat.
+    const langName = locale === 'en' ? 'English' : 'Russian';
 
     if (!process.env.ANTHROPIC_API_KEY) {
       return res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' });
@@ -115,9 +118,9 @@ Return ONLY valid JSON (no markdown, no extra text) with these fields:
 
 Be conservative with estimates - better to slightly overestimate calories.
 
-IMPORTANT: Respond in Russian language. All text fields (dishName, portionSize, ingredients, notes) must be in Russian.
+IMPORTANT: Respond in ${langName}. All text fields (dishName, portionSize, ingredients, notes) must be written in ${langName}.
 
-ТОЧНОСТЬ: Используй базу данных USDA FoodData Central как эталон для калорийности и БЖУ. Твои оценки должны быть воспроизводимыми — если анализировать это блюдо несколько раз, результат должен отличаться не более чем на 5%. Будь конкретным в размерах порций (измеримые единицы, не "средний").`
+ACCURACY: Use the USDA FoodData Central database as the reference for calories and macros. Your estimates must be reproducible — analyzing the same dish multiple times should not differ by more than 5%. Be specific about portion sizes (measurable units, not "medium").`
             }
           ],
         }

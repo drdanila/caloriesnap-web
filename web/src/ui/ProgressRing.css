@@ -1,0 +1,35 @@
+.ui-ring {
+  position: relative;
+  display: inline-flex;
+}
+
+.ui-ring__track {
+  fill: none;
+  stroke: var(--c-surface-2);
+}
+
+.ui-ring__fill {
+  fill: none;
+  stroke: var(--c-green);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.5s var(--ease);
+}
+
+.ui-ring.is-exceeded .ui-ring__fill {
+  stroke: var(--c-danger);
+}
+
+.ui-ring__center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  color: var(--c-text);
+}
+
+.ui-ring.is-exceeded .ui-ring__center {
+  color: var(--c-danger);
+}

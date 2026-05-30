@@ -1,0 +1,27 @@
+.ui-card {
+  background: var(--c-surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-sm);
+}
+
+.ui-card--p-sm {
+  padding: var(--s-3);
+}
+.ui-card--p-md {
+  padding: var(--s-5);
+}
+.ui-card--p-lg {
+  padding: var(--s-6);
+}
+
+.ui-card--interactive {
+  cursor: pointer;
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.ui-card--interactive:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--sh-md);
+}
+.ui-card--interactive:active {
+  transform: translateY(-1px) scale(0.995);
+}

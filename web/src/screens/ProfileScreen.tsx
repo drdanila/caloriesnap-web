@@ -7,6 +7,9 @@ import {
   saveUserProfile,
 } from '../services/profileService'
 import { Toast } from '../components/Toast'
+import { Button, Card, FormField, Input, Select, SegmentedControl, Stat } from '../ui'
+import { useT } from '../i18n/I18nProvider'
+import { TKey } from '../i18n/dictionaries'
 import './ProfileScreen.css'
 
 interface ProfileScreenProps {
@@ -16,15 +19,16 @@ interface ProfileScreenProps {
   onBack: () => void
 }
 
-const ACTIVITY_OPTIONS: { value: ActivityLevel; label: string }[] = [
-  { value: 'sedentary', label: 'Сидячий образ жизни' },
-  { value: 'light', label: 'Лёгкая активность' },
-  { value: 'moderate', label: 'Умеренная активность' },
-  { value: 'active', label: 'Высокая активность' },
-  { value: 'very_active', label: 'Очень высокая активность' },
+const ACTIVITY_OPTIONS: { value: ActivityLevel; key: TKey }[] = [
+  { value: 'sedentary', key: 'activity_sedentary' },
+  { value: 'light', key: 'activity_light' },
+  { value: 'moderate', key: 'activity_moderate' },
+  { value: 'active', key: 'activity_active' },
+  { value: 'very_active', key: 'activity_very_active' },
 ]
 
 export default function ProfileScreen({ userId, initialProfile, onSaved, onBack }: ProfileScreenProps) {
+  const { t } = useT()
   const [heightCm, setHeightCm] = useState(initialProfile ? String(initialProfile.heightCm) : '')
   const [weightKg, setWeightKg] = useState(initialProfile ? String(initialProfile.weightKg) : '')
   const [targetWeightKg, setTargetWeightKg] = useState(
@@ -38,8 +42,7 @@ export default function ProfileScreen({ userId, initialProfile, onSaved, onBack 
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'error' | 'success' } | null>(null)
 
-  // Профиль грузится асинхронно в родителе: если экран открыли раньше загрузки,
-  // initialProfile приходит позже — досинхронизируем поля формы.
+  // Профиль грузится асинхронно в родителе — досинхронизируем поля формы.
   useEffect(() => {
     if (!initialProfile) return
     setHeightCm(String(initialProfile.heightCm))
@@ -76,18 +79,18 @@ export default function ProfileScreen({ userId, initialProfile, onSaved, onBack 
 
   const handleSave = async () => {
     if (!isValid) {
-      setToast({ type: 'error', message: 'Заполните все поля корректными значениями' })
+      setToast({ type: 'error', message: t('profile_invalid') })
       return
     }
     setSaving(true)
     try {
       await saveUserProfile(candidate)
-      setToast({ type: 'success', message: 'Профиль сохранён' })
+      setToast({ type: 'success', message: t('profile_saved') })
       onSaved(candidate)
       onBack()
     } catch (error) {
       console.error('Failed to save profile:', error)
-      setToast({ type: 'error', message: 'Не удалось сохранить профиль' })
+      setToast({ type: 'error', message: t('profile_saveError') })
     } finally {
       setSaving(false)
     }
@@ -95,122 +98,68 @@ export default function ProfileScreen({ userId, initialProfile, onSaved, onBack 
 
   return (
     <div className="profile-screen">
-      <div className="profile-form">
-        <h2>Профиль</h2>
+      <Card className="profile-card">
+        <h2 className="profile-card__title">{t('profile_title')}</h2>
 
-        <div className="form-row">
-          <label htmlFor="height">Рост (см)</label>
-          <input
-            id="height"
-            type="number"
-            inputMode="numeric"
-            value={heightCm}
-            onChange={(e) => setHeightCm(e.target.value)}
-            placeholder="180"
+        <FormField label={t('profile_height')} htmlFor="height">
+          <Input id="height" type="number" inputMode="numeric" value={heightCm}
+            onChange={(e) => setHeightCm(e.target.value)} placeholder="180" />
+        </FormField>
+
+        <FormField label={t('profile_weight')} htmlFor="weight">
+          <Input id="weight" type="number" inputMode="decimal" value={weightKg}
+            onChange={(e) => setWeightKg(e.target.value)} placeholder="85" />
+        </FormField>
+
+        <FormField label={t('profile_targetWeight')} htmlFor="target">
+          <Input id="target" type="number" inputMode="decimal" value={targetWeightKg}
+            onChange={(e) => setTargetWeightKg(e.target.value)} placeholder="80" />
+        </FormField>
+
+        <FormField label={t('profile_age')} htmlFor="age">
+          <Input id="age" type="number" inputMode="numeric" value={age}
+            onChange={(e) => setAge(e.target.value)} placeholder="30" />
+        </FormField>
+
+        <FormField label={t('profile_gender')}>
+          <SegmentedControl<Gender>
+            value={gender}
+            onChange={setGender}
+            options={[
+              { value: 'male', label: t('profile_male') },
+              { value: 'female', label: t('profile_female') },
+            ]}
           />
-        </div>
+        </FormField>
 
-        <div className="form-row">
-          <label htmlFor="weight">Вес (кг)</label>
-          <input
-            id="weight"
-            type="number"
-            inputMode="decimal"
-            value={weightKg}
-            onChange={(e) => setWeightKg(e.target.value)}
-            placeholder="85"
-          />
-        </div>
-
-        <div className="form-row">
-          <label htmlFor="target">Целевой вес (кг)</label>
-          <input
-            id="target"
-            type="number"
-            inputMode="decimal"
-            value={targetWeightKg}
-            onChange={(e) => setTargetWeightKg(e.target.value)}
-            placeholder="80"
-          />
-        </div>
-
-        <div className="form-row">
-          <label htmlFor="age">Возраст</label>
-          <input
-            id="age"
-            type="number"
-            inputMode="numeric"
-            value={age}
-            onChange={(e) => setAge(e.target.value)}
-            placeholder="30"
-          />
-        </div>
-
-        <div className="form-row">
-          <label>Пол</label>
-          <div className="gender-toggle">
-            <button
-              type="button"
-              className={gender === 'male' ? 'active' : ''}
-              onClick={() => setGender('male')}
-            >
-              Мужской
-            </button>
-            <button
-              type="button"
-              className={gender === 'female' ? 'active' : ''}
-              onClick={() => setGender('female')}
-            >
-              Женский
-            </button>
-          </div>
-        </div>
-
-        <div className="form-row">
-          <label htmlFor="activity">Уровень активности</label>
-          <select
-            id="activity"
-            value={activityLevel}
-            onChange={(e) => setActivityLevel(e.target.value as ActivityLevel)}
-          >
+        <FormField label={t('profile_activity')} htmlFor="activity">
+          <Select id="activity" value={activityLevel}
+            onChange={(e) => setActivityLevel(e.target.value as ActivityLevel)}>
             {ACTIVITY_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
+              <option key={opt.value} value={opt.value}>{t(opt.key)}</option>
             ))}
-          </select>
-        </div>
-      </div>
+          </Select>
+        </FormField>
 
-      <div className="targets-preview">
-        <h3>Дневная норма</h3>
+      </Card>
+
+      <Card className="targets-card">
+        <h3 className="targets-card__title">{t('profile_dailyTargets')}</h3>
         {targets ? (
           <div className="targets-grid">
-            <div className="target-item">
-              <span className="target-value">{targets.calories}</span>
-              <span className="target-label">ккал</span>
-            </div>
-            <div className="target-item">
-              <span className="target-value">{targets.protein}</span>
-              <span className="target-label">белки, г</span>
-            </div>
-            <div className="target-item">
-              <span className="target-value">{targets.fat}</span>
-              <span className="target-label">жиры, г</span>
-            </div>
-            <div className="target-item">
-              <span className="target-value">{targets.carbs}</span>
-              <span className="target-label">углеводы, г</span>
-            </div>
+            <Stat boxed value={targets.calories} label={t('target_kcal')} />
+            <Stat boxed value={targets.protein} label={t('target_protein')} />
+            <Stat boxed value={targets.fat} label={t('target_fat')} />
+            <Stat boxed value={targets.carbs} label={t('target_carbs')} />
           </div>
         ) : (
-          <p className="targets-placeholder">Заполните все поля</p>
+          <p className="targets-placeholder">{t('profile_fillAll')}</p>
         )}
-      </div>
+      </Card>
 
-      <button className="profile-save-btn" onClick={handleSave} disabled={saving || !isValid}>
-        {saving ? 'Сохранение...' : 'Сохранить'}
-      </button>
+      <Button fullWidth size="lg" onClick={handleSave} loading={saving} disabled={!isValid}>
+        {saving ? t('saving') : t('save')}
+      </Button>
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>

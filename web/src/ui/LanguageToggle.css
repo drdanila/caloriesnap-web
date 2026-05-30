@@ -1,0 +1,38 @@
+.lang-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: var(--r-pill);
+}
+
+.lang-toggle__flag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: var(--r-pill);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.6;
+  filter: grayscale(0.5);
+  transition: opacity var(--dur) ease, background var(--dur) ease, transform var(--dur) var(--ease);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.lang-toggle__flag.is-active {
+  background: #fff;
+  opacity: 1;
+  filter: none;
+  box-shadow: var(--sh-sm);
+}
+
+.lang-toggle__flag:active {
+  transform: scale(0.9);
+}
