@@ -10,19 +10,35 @@ function App() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    let unsubscribe: (() => void) | undefined
+    // redirectPending: пока getRedirectResult не завершился, не скрываем спиннер
+    // при null-ответе onAuthStateChanged — иначе на мобильном мелькает LoginScreen.
+    let redirectPending = true
+    let lastUser: User | null = null
 
-    // Сначала завершаем вход через редирект (мобильные/iOS), только потом
-    // слушаем авторизацию — иначе onAuthStateChanged срабатывает с null
-    // раньше, чем getRedirectResult обработает токен.
-    completeRedirectSignIn().finally(() => {
-      unsubscribe = onAuthChange((authUser) => {
+    const unsubscribe = onAuthChange((authUser) => {
+      lastUser = authUser
+      if (authUser) {
+        // Вошёл — показываем сразу (popup на десктопе или успешный редирект)
         setUser(authUser)
         setLoading(false)
-      })
+      } else if (!redirectPending) {
+        // Не вошёл и редирект уже обработан — показываем LoginScreen
+        setUser(null)
+        setLoading(false)
+      }
+      // Иначе: null + редирект ещё в процессе — держим спиннер
     })
 
-    return () => unsubscribe?.()
+    completeRedirectSignIn().finally(() => {
+      redirectPending = false
+      if (!lastUser) {
+        // Редирект завершился, пользователя нет — показываем LoginScreen
+        setUser(null)
+        setLoading(false)
+      }
+    })
+
+    return unsubscribe
   }, [])
 
   if (loading) {
