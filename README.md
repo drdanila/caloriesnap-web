@@ -25,6 +25,16 @@ caloriesnap-web/
 └─ package.json         # Root orchestrator scripts (dev / build / deploy)
 ```
 
+## Docs / working in this repo
+
+These four files form a connected set. **AI sessions: start at `CLAUDE.md`** — it is
+auto-loaded and links to the rest.
+
+- **[CLAUDE.md](CLAUDE.md)** — session entrypoint: CalorieSnap rules, practices, and features. Read every session; imports the debt backlog.
+- **[PROJECT_CONTEXT.md](PROJECT_CONTEXT.md)** — current architecture, services, data model, features, environment (≤1000 words).
+- **[TECH_DEBT.md](TECH_DEBT.md)** — living tech-debt backlog; reviewed every session.
+- **[AI_DEVELOPMENT_RULES.md](AI_DEVELOPMENT_RULES.md)** — generic development methodology.
+
 ## Setup
 
 1. Copy the env template and fill in Firebase credentials:
