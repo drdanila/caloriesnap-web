@@ -2,7 +2,7 @@
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 40;
+  z-index: 1040;
   backdrop-filter: blur(2px);
 }
 
@@ -16,7 +16,7 @@
   padding: 20px;
   max-height: 90vh;
   overflow-y: auto;
-  z-index: 50;
+  z-index: 1050;
   animation: slideUp 0.3s ease-out;
   display: flex;
   flex-direction: column;

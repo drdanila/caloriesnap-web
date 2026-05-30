@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { User } from 'firebase/auth'
-import { onAuthChange } from './services/authService'
+import { onAuthChange, completeRedirectSignIn } from './services/authService'
 import LoginScreen from './screens/LoginScreen'
 import MainScreen from './screens/MainScreen'
 import './App.css'
@@ -10,6 +10,8 @@ function App() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // Завершаем вход через редирект (мобильные/iOS), затем слушаем авторизацию.
+    completeRedirectSignIn()
     const unsubscribe = onAuthChange((authUser) => {
       setUser(authUser)
       setLoading(false)

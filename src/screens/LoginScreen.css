@@ -59,11 +59,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  white-space: nowrap;
 }
 
 .google-icon {
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
+  /* margin вместо flex gap: gap не поддерживается в Safari < 14.1 (iOS),
+     там иконка наезжала на текст */
+  margin-right: 10px;
 }
 
 .signin-button:hover:not(:disabled) {
