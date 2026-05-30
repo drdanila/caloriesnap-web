@@ -7,7 +7,7 @@ import {
   saveUserProfile,
 } from '../services/profileService'
 import { Toast } from '../components/Toast'
-import { Button, Card, FormField, Input, Select, SegmentedControl, Stat, LanguageToggle } from '../ui'
+import { Button, Card, FormField, Input, Select, SegmentedControl, Stat } from '../ui'
 import { useT } from '../i18n/I18nProvider'
 import { TKey } from '../i18n/dictionaries'
 import './ProfileScreen.css'
@@ -141,9 +141,6 @@ export default function ProfileScreen({ userId, initialProfile, onSaved, onBack 
           </Select>
         </FormField>
 
-        <FormField label={t('language')}>
-          <LanguageToggle />
-        </FormField>
       </Card>
 
       <Card className="targets-card">

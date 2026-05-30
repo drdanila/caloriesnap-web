@@ -9,9 +9,16 @@ const meta: Meta<typeof LanguageToggle> = {
 export default meta
 type Story = StoryObj<typeof LanguageToggle>
 
-export const Default: Story = {
+export const OnHeader: Story = {
   render: () => (
-    <div style={{ maxWidth: 260 }}>
+    <div
+      style={{
+        display: 'inline-flex',
+        padding: 12,
+        borderRadius: 16,
+        background: 'var(--grad-mint)',
+      }}
+    >
       <LanguageToggle />
     </div>
   ),

@@ -11,7 +11,7 @@ import {
 } from '../services/profileService'
 import { ResultCard } from '../components/ResultCard'
 import { Toast } from '../components/Toast'
-import { Button, IconButton, Card, ProgressBar, ProgressRing, BottomNav, LoadingOverlay } from '../ui'
+import { Button, IconButton, Card, ProgressBar, ProgressRing, BottomNav, LoadingOverlay, LanguageToggle } from '../ui'
 import { useT } from '../i18n/I18nProvider'
 import './MainScreen.css'
 
@@ -130,6 +130,7 @@ export default function MainScreen({ user }: { user: User }) {
           <span className="app-header__greeting">
             {t('greeting', { name: user.displayName?.split(' ')[0] || '' })}
           </span>
+          <LanguageToggle />
           <IconButton variant="onAccent" size="sm" label={t('signOut')} onClick={handleSignOut}>
             <LogOut size={16} />
           </IconButton>

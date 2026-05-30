@@ -47,6 +47,13 @@
   white-space: nowrap;
 }
 
+/* Tight phones: drop the greeting so the flag switch + sign-out always fit. */
+@media (max-width: 400px) {
+  .app-header__greeting {
+    display: none;
+  }
+}
+
 /* ---- Home ---- */
 .home-screen {
   flex: 1;
