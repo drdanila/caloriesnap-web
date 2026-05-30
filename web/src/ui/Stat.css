@@ -1,0 +1,34 @@
+.ui-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+}
+
+.ui-stat--boxed {
+  padding: var(--s-3) var(--s-2);
+  background: var(--c-surface-2);
+  border-radius: var(--r-md);
+}
+
+.ui-stat__value {
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-bold);
+  line-height: 1.1;
+}
+
+.ui-stat--green .ui-stat__value {
+  color: var(--c-green-700);
+}
+.ui-stat--mint .ui-stat__value {
+  color: var(--c-mint);
+}
+.ui-stat--neutral .ui-stat__value {
+  color: var(--c-text);
+}
+
+.ui-stat__label {
+  font-size: var(--fs-xs);
+  color: var(--c-text-3);
+}

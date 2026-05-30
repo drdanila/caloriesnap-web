@@ -1,0 +1,94 @@
+.ui-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  border: none;
+  border-radius: var(--r-pill);
+  font-family: var(--font-sans);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease),
+    background var(--dur) ease, opacity var(--dur) ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ui-btn__icon {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ---- sizes ---- */
+.ui-btn--sm {
+  padding: 8px 14px;
+  font-size: var(--fs-sm);
+}
+.ui-btn--md {
+  padding: 12px 20px;
+  font-size: var(--fs-md);
+}
+.ui-btn--lg {
+  padding: 15px 24px;
+  font-size: var(--fs-lg);
+}
+
+.ui-btn--full {
+  width: 100%;
+}
+
+/* ---- variants ---- */
+.ui-btn--primary {
+  background: var(--grad-primary);
+  color: var(--c-on-accent);
+  box-shadow: var(--sh-sm);
+}
+.ui-btn--primary:hover:not(:disabled) {
+  background: var(--grad-primary-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--sh-primary);
+}
+
+.ui-btn--secondary {
+  background: var(--c-surface-2);
+  color: var(--c-text);
+  border: 1.5px solid var(--c-border);
+}
+.ui-btn--secondary:hover:not(:disabled) {
+  background: var(--c-green-50);
+  border-color: var(--c-green-100);
+  transform: translateY(-2px);
+  box-shadow: var(--sh-sm);
+}
+
+.ui-btn--ghost {
+  background: transparent;
+  color: var(--c-text-2);
+}
+.ui-btn--ghost:hover:not(:disabled) {
+  background: var(--c-surface-2);
+  color: var(--c-text);
+}
+
+.ui-btn--danger {
+  background: var(--c-danger);
+  color: var(--c-on-accent);
+  box-shadow: var(--sh-sm);
+}
+.ui-btn--danger:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(229, 86, 75, 0.3);
+  filter: brightness(1.03);
+}
+
+.ui-btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+.ui-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.ui-btn--loading {
+  cursor: progress;
+}

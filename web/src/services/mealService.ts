@@ -52,7 +52,7 @@ async function compressImage(file: File): Promise<string> {
   })
 }
 
-export async function analyzeMealImage(imageFile: File, userId: string) {
+export async function analyzeMealImage(imageFile: File, userId: string, locale: string = 'ru') {
   const base64 = await compressImage(imageFile)
 
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080'
@@ -70,6 +70,8 @@ export async function analyzeMealImage(imageFile: File, userId: string) {
           // а не оригинальный imageFile.type (webp/png/heic) — иначе Claude
           // отклоняет запрос с 400 (media_type не совпадает с байтами).
           mimeType: 'image/jpeg',
+          // язык ответа AI (названия блюд/состав/заметки)
+          locale,
         })
       }
     )

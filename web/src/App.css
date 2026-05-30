@@ -1,34 +1,39 @@
+@import './styles/tokens.css';
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+html,
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: #f5f5f5;
+  color: var(--c-text);
+  background: var(--c-bg);
 }
 
+/* Full-screen loading state (App.tsx auth bootstrap) */
 .loading-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  gap: var(--s-4);
+  background: var(--grad-mint);
+  color: var(--c-on-accent);
 }
 
 .spinner {
-  width: 50px;
-  height: 50px;
-  border: 4px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: var(--r-pill);
+  animation: spin 0.9s linear infinite;
 }
 
 @keyframes spin {

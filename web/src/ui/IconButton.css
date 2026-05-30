@@ -1,0 +1,58 @@
+.ui-iconbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--r-pill);
+  cursor: pointer;
+  color: var(--c-text-2);
+  transition: transform var(--dur) var(--ease), background var(--dur) ease, color var(--dur) ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ui-iconbtn--sm {
+  width: 32px;
+  height: 32px;
+}
+.ui-iconbtn--md {
+  width: 40px;
+  height: 40px;
+}
+
+.ui-iconbtn--soft {
+  background: var(--c-surface-2);
+}
+.ui-iconbtn--soft:hover:not(:disabled) {
+  background: var(--c-green-50);
+  color: var(--c-green-700);
+}
+
+.ui-iconbtn--solid {
+  background: var(--grad-primary);
+  color: var(--c-on-accent);
+}
+
+.ui-iconbtn--ghost {
+  background: transparent;
+}
+.ui-iconbtn--ghost:hover:not(:disabled) {
+  background: var(--c-surface-2);
+  color: var(--c-text);
+}
+
+/* For placement on the mint header */
+.ui-iconbtn--onAccent {
+  background: rgba(255, 255, 255, 0.22);
+  color: var(--c-on-accent);
+}
+.ui-iconbtn--onAccent:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.34);
+}
+
+.ui-iconbtn:active:not(:disabled) {
+  transform: scale(0.92);
+}
+.ui-iconbtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

@@ -1,0 +1,28 @@
+.ui-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--s-2);
+  padding: var(--s-8) var(--s-5);
+  color: var(--c-text-3);
+}
+
+.ui-empty__emoji {
+  font-size: 56px;
+  margin-bottom: var(--s-2);
+}
+
+.ui-empty__title {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-semibold);
+  color: var(--c-text);
+}
+
+.ui-empty__subtitle {
+  font-size: var(--fs-sm);
+}
+
+.ui-empty__action {
+  margin-top: var(--s-3);
+}

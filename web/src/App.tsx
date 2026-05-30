@@ -3,9 +3,11 @@ import { User } from 'firebase/auth'
 import { onAuthChange, completeRedirectSignIn } from './services/authService'
 import LoginScreen from './screens/LoginScreen'
 import MainScreen from './screens/MainScreen'
+import { useT } from './i18n/I18nProvider'
 import './App.css'
 
 function App() {
+  const { t } = useT()
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -45,7 +47,7 @@ function App() {
     return (
       <div className="loading-container">
         <div className="spinner"></div>
-        <p>Loading...</p>
+        <p>{t('loading')}</p>
       </div>
     )
   }

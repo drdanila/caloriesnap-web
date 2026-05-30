@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { User } from 'firebase/auth'
+import { Camera, CalendarDays, Home, Image as ImageIcon, LogOut, User as UserIcon } from 'lucide-react'
 import { signOut } from '../services/authService'
 import { analyzeMealImage, fetchUserMeals, Meal, saveMeal, deleteMeal } from '../services/mealService'
 import {
@@ -10,6 +11,8 @@ import {
 } from '../services/profileService'
 import { ResultCard } from '../components/ResultCard'
 import { Toast } from '../components/Toast'
+import { Button, IconButton, Card, ProgressBar, ProgressRing, BottomNav, LoadingOverlay } from '../ui'
+import { useT } from '../i18n/I18nProvider'
 import './MainScreen.css'
 
 const HistoryScreen = lazy(() => import('./HistoryScreen'))
@@ -17,15 +20,18 @@ const ProfileScreen = lazy(() => import('./ProfileScreen'))
 
 const DEFAULT_TARGETS: NutritionTargets = { calories: 1800, protein: 90, fat: 50, carbs: 225 }
 
+type Tab = 'home' | 'history' | 'profile'
+
 export default function MainScreen({ user }: { user: User }) {
+  const { t, lang } = useT()
   const [meals, setMeals] = useState<Meal[]>([])
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
-  const [activeTab, setActiveTab] = useState<'home' | 'history' | 'profile'>('home')
+  const [activeTab, setActiveTab] = useState<Tab>('home')
   const [result, setResult] = useState<Omit<Meal, 'id' | 'userId' | 'createdAt'> | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const [currentFile, setCurrentFile] = useState<File | null>(null)
-  const [toast, setToast] = useState<{message: string; type: 'error'|'success'} | null>(null)
+  const [, setCurrentFile] = useState<File | null>(null)
+  const [toast, setToast] = useState<{ message: string; type: 'error' | 'success' } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -36,8 +42,7 @@ export default function MainScreen({ user }: { user: User }) {
   const loadMeals = async () => {
     if (!user.uid) return
     try {
-      const userMeals = await fetchUserMeals(user.uid)
-      setMeals(userMeals)
+      setMeals(await fetchUserMeals(user.uid))
     } catch (error) {
       console.error('Failed to load meals:', error)
     }
@@ -56,15 +61,12 @@ export default function MainScreen({ user }: { user: User }) {
     if (!user.uid || !file) return
 
     setCurrentFile(file)
-    const previewDataUrl = URL.createObjectURL(file)
-    setPreviewUrl(previewDataUrl)
+    setPreviewUrl(URL.createObjectURL(file))
     setAnalyzing(true)
 
     try {
-      const analysisResult = await analyzeMealImage(file, user.uid)
+      const analysisResult = await analyzeMealImage(file, user.uid, lang)
       setResult(analysisResult)
-      setAnalyzing(false)
-
       try {
         await saveMeal({ ...analysisResult, userId: user.uid })
       } catch (saveError) {
@@ -73,8 +75,7 @@ export default function MainScreen({ user }: { user: User }) {
       await loadMeals()
     } catch (error: any) {
       console.error('Analysis error:', error)
-      const errorMessage = error?.message || 'Не удалось анализировать блюдо. Попробуйте снова.'
-      setToast({ type: 'error', message: errorMessage })
+      setToast({ type: 'error', message: error?.message || t('analyzeError') })
       setResult(null)
       setPreviewUrl(null)
     } finally {
@@ -95,10 +96,9 @@ export default function MainScreen({ user }: { user: User }) {
     }
   }
 
-  const todayMeals = meals.filter(meal => {
-    const today = new Date().toDateString()
-    return new Date(meal.createdAt).toDateString() === today
-  })
+  const todayMeals = meals.filter(
+    (meal) => new Date(meal.createdAt).toDateString() === new Date().toDateString()
+  )
 
   const totals = todayMeals.reduce(
     (acc, meal) => ({
@@ -111,33 +111,28 @@ export default function MainScreen({ user }: { user: User }) {
   )
 
   const targets = profile ? calculateTargets(profile) : DEFAULT_TARGETS
+  const caloriesExceeded = totals.calories > targets.calories
 
   const metrics = [
-    { key: 'protein', label: 'Белки', unit: 'г', value: totals.protein, goal: targets.protein },
-    { key: 'fat', label: 'Жиры', unit: 'г', value: totals.fat, goal: targets.fat },
-    { key: 'carbs', label: 'Углеводы', unit: 'г', value: totals.carbs, goal: targets.carbs },
+    { key: 'protein', label: t('protein'), value: totals.protein, goal: targets.protein },
+    { key: 'fat', label: t('fat'), value: totals.fat, goal: targets.fat },
+    { key: 'carbs', label: t('carbs'), value: totals.carbs, goal: targets.carbs },
   ]
 
   return (
     <div className="main-container">
-      <header className="header">
-        <div className="header-left">
-          <img id="logo" src="/favicon.svg" alt="logo" className="logo" />
-          <h1>CalorieSnap</h1>
+      <header className="app-header">
+        <div className="app-header__brand">
+          <img src="/favicon.svg" alt="" className="app-header__logo" />
+          <h1>{t('brand')}</h1>
         </div>
-        <div className="header-actions">
-          <span className="user-name">Hi, {user.displayName?.split(' ')[0]}</span>
-          <button
-            onClick={() => setActiveTab('profile')}
-            className="profile-icon-btn"
-            aria-label="Профиль"
-            title="Профиль"
-          >
-            👤
-          </button>
-          <button onClick={handleSignOut} className="signout-btn">
-            Sign Out
-          </button>
+        <div className="app-header__actions">
+          <span className="app-header__greeting">
+            {t('greeting', { name: user.displayName?.split(' ')[0] || '' })}
+          </span>
+          <IconButton variant="onAccent" size="sm" label={t('signOut')} onClick={handleSignOut}>
+            <LogOut size={16} />
+          </IconButton>
         </div>
       </header>
 
@@ -145,62 +140,48 @@ export default function MainScreen({ user }: { user: User }) {
         <div className="home-screen">
           {!profile && (
             <div className="profile-prompt">
-              <span>Заполните профиль для персональных целей</span>
-              <button onClick={() => setActiveTab('profile')}>Заполнить</button>
+              <span>{t('fillProfilePrompt')}</span>
+              <Button size="sm" onClick={() => setActiveTab('profile')}>
+                {t('fillProfileCta')}
+              </Button>
             </div>
           )}
 
-          <div className={`calories-card${totals.calories > targets.calories ? ' exceeded' : ''}`}>
-            <h2>Калории за сегодня</h2>
-            <div className="calories-display">
-              <span className="calories-number">{Math.round(totals.calories)}</span>
-              <span className="calories-goal">/ {targets.calories} ккал</span>
+          <Card className={`cal-card${caloriesExceeded ? ' is-exceeded' : ''}`}>
+            <h2 className="cal-card__title">{t('caloriesToday')}</h2>
+            <div className="cal-card__display">
+              <span className="cal-card__number">{Math.round(totals.calories)}</span>
+              <span className="cal-card__goal">{t('caloriesGoal', { goal: targets.calories })}</span>
             </div>
-            <div className="progress-bar">
-              <div
-                className="progress-fill"
-                style={{
-                  width: `${targets.calories > 0 ? Math.min((totals.calories / targets.calories) * 100, 100) : 0}%`,
-                }}
-              ></div>
-            </div>
-            <p className="meal-count">{todayMeals.length} блюд за сегодня</p>
-          </div>
+            <ProgressBar
+              value={targets.calories > 0 ? totals.calories / targets.calories : 0}
+              exceeded={caloriesExceeded}
+            />
+            <p className="cal-card__meals">{t('mealsToday', { count: todayMeals.length })}</p>
+          </Card>
 
-          <div className="macro-targets">
+          <Card className="macro-card">
             {metrics.map((m) => {
               const exceeded = m.value > m.goal
-              const pct = m.goal > 0 ? Math.min(m.value / m.goal, 1) : 0
-              const radius = 26
-              const circumference = 2 * Math.PI * radius
               return (
-                <div key={m.key} className={`macro-ring${exceeded ? ' exceeded' : ''}`}>
-                  <div className="ring-wrap">
-                    <svg width="64" height="64" viewBox="0 0 64 64">
-                      <circle className="ring-track" cx="32" cy="32" r={radius} />
-                      <circle
-                        className="ring-fill"
-                        cx="32"
-                        cy="32"
-                        r={radius}
-                        strokeDasharray={circumference}
-                        strokeDashoffset={circumference * (1 - pct)}
-                        transform="rotate(-90 32 32)"
-                      />
-                    </svg>
-                    <span className="ring-value">{Math.round(m.value)}</span>
-                  </div>
-                  <span className="macro-ring-label">{m.label}</span>
-                  <span className="macro-ring-goal">
-                    / {m.goal} {m.unit}
-                  </span>
+                <div key={m.key} className="macro-item">
+                  <ProgressRing
+                    value={m.goal > 0 ? m.value / m.goal : 0}
+                    center={Math.round(m.value)}
+                    exceeded={exceeded}
+                  />
+                  <span className="macro-item__label">{m.label}</span>
+                  <span className="macro-item__goal">/ {m.goal} {t('unit_g')}</span>
                 </div>
               )
             })}
-          </div>
+          </Card>
 
           <div className="action-buttons">
-            <button
+            <Button
+              size="lg"
+              leftIcon={<Camera size={20} />}
+              disabled={analyzing}
               onClick={() => {
                 const input = document.createElement('input')
                 input.type = 'file'
@@ -209,26 +190,21 @@ export default function MainScreen({ user }: { user: User }) {
                 input.onchange = (e: any) => handleFileChange(e)
                 input.click()
               }}
-              disabled={analyzing}
-              className="action-btn primary"
             >
-              📷 Take Photo
-            </button>
-            <button
+              {t('takePhoto')}
+            </Button>
+            <Button
+              size="lg"
+              variant="secondary"
+              leftIcon={<ImageIcon size={20} />}
+              disabled={analyzing}
               onClick={() => fileInputRef.current?.click()}
-              disabled={analyzing}
-              className="action-btn"
             >
-              🖼️ Choose File
-            </button>
+              {t('choosePhoto')}
+            </Button>
           </div>
 
-          {analyzing && (
-            <div className="analyzing-overlay">
-              <div className="loader-spinner"></div>
-              <p>Analyzing your meal...</p>
-            </div>
-          )}
+          {analyzing && <LoadingOverlay message={t('analyzing')} />}
 
           <input
             ref={fileInputRef}
@@ -239,7 +215,7 @@ export default function MainScreen({ user }: { user: User }) {
           />
         </div>
       ) : activeTab === 'history' ? (
-        <Suspense fallback={<div className="loading-fallback">Loading history...</div>}>
+        <Suspense fallback={<div className="loading-fallback">{t('loading')}</div>}>
           <HistoryScreen
             meals={meals}
             onMealDelete={async (id) => {
@@ -249,7 +225,7 @@ export default function MainScreen({ user }: { user: User }) {
           />
         </Suspense>
       ) : (
-        <Suspense fallback={<div className="loading-fallback">Загрузка...</div>}>
+        <Suspense fallback={<div className="loading-fallback">{t('loading')}</div>}>
           <ProfileScreen
             userId={user.uid}
             initialProfile={profile}
@@ -271,30 +247,17 @@ export default function MainScreen({ user }: { user: User }) {
         />
       )}
 
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-      <nav className="bottom-nav">
-        <button
-          className={`nav-item ${activeTab === 'home' ? 'active' : ''}`}
-          onClick={() => setActiveTab('home')}
-        >
-          <span className="nav-icon">🏠</span>
-          <span className="nav-label">Главная</span>
-        </button>
-        <button
-          className={`nav-item ${activeTab === 'history' ? 'active' : ''}`}
-          onClick={() => setActiveTab('history')}
-        >
-          <span className="nav-icon">📅</span>
-          <span className="nav-label">История</span>
-        </button>
-      </nav>
+      <BottomNav<Tab>
+        items={[
+          { key: 'home', label: t('nav_home'), icon: <Home size={22} /> },
+          { key: 'history', label: t('nav_history'), icon: <CalendarDays size={22} /> },
+          { key: 'profile', label: t('nav_profile'), icon: <UserIcon size={22} /> },
+        ]}
+        active={activeTab}
+        onChange={setActiveTab}
+      />
     </div>
   )
 }

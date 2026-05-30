@@ -1,144 +1,165 @@
 import { useState } from 'react'
-import { Meal, deleteMeal } from '../services/mealService'
+import { ChevronLeft, ChevronRight, Trash2 } from 'lucide-react'
+import { Meal } from '../services/mealService'
 import { ResultCard } from '../components/ResultCard'
+import { Badge, Button, Card, EmptyState, IconButton, Modal } from '../ui'
+import { useT } from '../i18n/I18nProvider'
 import './HistoryScreen.css'
 
-export default function HistoryScreen({ meals, onMealDelete }: { meals: Meal[]; onMealDelete: (id: string) => Promise<void> }) {
+export default function HistoryScreen({
+  meals,
+  onMealDelete,
+}: {
+  meals: Meal[]
+  onMealDelete: (id: string) => Promise<void>
+}) {
+  const { t, lang } = useT()
+  const locale = lang === 'ru' ? 'ru-RU' : 'en-US'
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null)
   const [confirmingId, setConfirmingId] = useState<string | null>(null)
 
   const isToday = selectedDate.toDateString() === new Date().toDateString()
-
   const dateLabel = isToday
-    ? 'Сегодня'
-    : selectedDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
+    ? t('history_today')
+    : selectedDate.toLocaleDateString(locale, { day: 'numeric', month: 'long' })
 
-  const dayMeals = meals.filter(meal =>
-    new Date(meal.createdAt).toDateString() === selectedDate.toDateString()
+  const dayMeals = meals.filter(
+    (meal) => new Date(meal.createdAt).toDateString() === selectedDate.toDateString()
   )
-
   const dayCalories = dayMeals.reduce((sum, m) => sum + m.calories, 0)
 
   if (meals.length === 0) {
     return (
-      <div className="history-screen empty">
-        <div className="empty-state">
-          <div className="empty-emoji">📸</div>
-          <p>No meals logged yet</p>
-          <span>Start by taking a photo of your meal</span>
-        </div>
+      <div className="history-screen history-screen--empty">
+        <EmptyState emoji="📸" title={t('history_emptyTitle')} subtitle={t('history_emptySubtitle')} />
       </div>
     )
   }
 
+  const confidenceColor = (c: number) =>
+    c >= 80 ? 'var(--c-success)' : c >= 60 ? 'var(--c-warning)' : 'var(--c-danger)'
+
   return (
     <div className="history-screen">
       <div className="date-nav">
-        <button onClick={() => setSelectedDate(d => new Date(d.getTime() - 86400000))}>←</button>
-        <span className="date-label">{dateLabel}</span>
-        <button onClick={() => setSelectedDate(d => new Date(d.getTime() + 86400000))} disabled={isToday}>→</button>
+        <IconButton
+          label="←"
+          size="sm"
+          variant="soft"
+          onClick={() => setSelectedDate((d) => new Date(d.getTime() - 86400000))}
+        >
+          <ChevronLeft size={18} />
+        </IconButton>
+        <span className="date-nav__label">{dateLabel}</span>
+        <IconButton
+          label="→"
+          size="sm"
+          variant="soft"
+          disabled={isToday}
+          onClick={() => setSelectedDate((d) => new Date(d.getTime() + 86400000))}
+        >
+          <ChevronRight size={18} />
+        </IconButton>
       </div>
 
       <div className="day-summary">
-        <span>{dayCalories} kcal</span>
-        <span>{dayMeals.length} блюд</span>
+        <span>{dayCalories} {t('kcal')}</span>
+        <span>{t('history_meals', { count: dayMeals.length })}</span>
       </div>
 
       <div className="meals-list">
         {dayMeals.length === 0 ? (
-          <div className="empty-day">
-            <p>Нет блюд в этот день</p>
-          </div>
+          <p className="empty-day">{t('history_noMealsDay')}</p>
         ) : (
           dayMeals.map((meal) => {
-            const time = new Date(meal.createdAt).toLocaleTimeString('ru-RU', {
+            const time = new Date(meal.createdAt).toLocaleTimeString(locale, {
               hour: '2-digit',
               minute: '2-digit',
             })
             return (
-              <div key={meal.id} className="meal-item">
-                <button
-                  className="meal-delete-btn"
-                  onClick={() => setConfirmingId(meal.id)}
-                  title="Delete meal"
-                >
-                  🗑️
-                </button>
-
-                <div className="meal-image-col">
-                  <div className="meal-image meal-clickable" onClick={() => setSelectedMeal(meal)}>
+              <Card key={meal.id} interactive padding="sm" className="meal-item" onClick={() => setSelectedMeal(meal)}>
+                <div className="meal-item__media">
+                  <div className="meal-thumb">
                     {meal.imageUrl ? (
-                      <img src={meal.imageUrl} alt={meal.dishName} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                      <img
+                        src={meal.imageUrl}
+                        alt={meal.dishName}
+                        onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')}
+                      />
                     ) : (
-                      <span className="meal-emoji">🍽️</span>
+                      <span className="meal-thumb__emoji">🍽️</span>
                     )}
                   </div>
-                  <span className="meal-cal-badge">{meal.calories}</span>
+                  <Badge tone="mint">{meal.calories}</Badge>
                 </div>
 
-                <div className="meal-details meal-clickable" onClick={() => setSelectedMeal(meal)}>
-                  <div className="meal-header">
-                    <h4 style={{ cursor: 'pointer' }}>{meal.dishName}</h4>
-                    <span className="meal-time">{time}</span>
+                <div className="meal-item__body">
+                  <div className="meal-item__head">
+                    <h4>{meal.dishName}</h4>
+                    <span className="meal-item__time">{time}</span>
                   </div>
-                  <p className="meal-macros">
-                    P: {meal.protein}g · F: {meal.fat}g · C: {meal.carbs}g
+                  <p className="meal-item__macros">
+                    {t('protein')[0]} {meal.protein} · {t('fat')[0]} {meal.fat} · {t('carbs')[0]} {meal.carbs} {t('unit_g')}
                   </p>
-                  <div className="confidence-bar-wrap">
-                    <div className="confidence-bar">
-                      <div
-                        className="confidence-fill"
-                        style={{
-                          width: `${meal.confidence}%`,
-                          background: meal.confidence >= 80 ? '#3fa876' : meal.confidence >= 60 ? '#f39c12' : '#e74c3c'
-                        }}
-                      />
-                    </div>
+                  <div className="confidence-bar">
+                    <div
+                      className="confidence-fill"
+                      style={{ width: `${meal.confidence}%`, background: confidenceColor(meal.confidence) }}
+                    />
                   </div>
                 </div>
-              </div>
+
+                <IconButton
+                  className="meal-item__delete"
+                  variant="ghost"
+                  size="sm"
+                  label={t('delete')}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setConfirmingId(meal.id)
+                  }}
+                >
+                  <Trash2 size={16} />
+                </IconButton>
+              </Card>
             )
           })
         )}
       </div>
 
-      {selectedMeal && (() => {
-        const { id, userId, createdAt, ...mealResult } = selectedMeal
-        return (
-          <ResultCard
-            result={mealResult}
-            imageUrl={selectedMeal.imageUrl || ''}
-            onClose={() => setSelectedMeal(null)}
-          />
-        )
-      })()}
+      {selectedMeal &&
+        (() => {
+          const { id, userId, createdAt, ...mealResult } = selectedMeal
+          return (
+            <ResultCard
+              result={mealResult}
+              imageUrl={selectedMeal.imageUrl || ''}
+              onClose={() => setSelectedMeal(null)}
+            />
+          )
+        })()}
 
-      {confirmingId && (
-        <>
-          <div className="confirm-backdrop" onClick={() => setConfirmingId(null)} />
-          <div className="confirm-dialog">
-            <h3>Удалить это блюдо?</h3>
-            <div className="confirm-actions">
-              <button
-                className="confirm-cancel"
-                onClick={() => setConfirmingId(null)}
-              >
-                Отмена
-              </button>
-              <button
-                className="confirm-delete"
-                onClick={async () => {
-                  await onMealDelete(confirmingId)
-                  setConfirmingId(null)
-                }}
-              >
-                Удалить
-              </button>
-            </div>
+      <Modal open={!!confirmingId} onClose={() => setConfirmingId(null)} variant="center">
+        <div className="confirm-dialog">
+          <h3>{t('history_deleteConfirm')}</h3>
+          <div className="confirm-actions">
+            <Button variant="secondary" fullWidth onClick={() => setConfirmingId(null)}>
+              {t('cancel')}
+            </Button>
+            <Button
+              variant="danger"
+              fullWidth
+              onClick={async () => {
+                if (confirmingId) await onMealDelete(confirmingId)
+                setConfirmingId(null)
+              }}
+            >
+              {t('delete')}
+            </Button>
           </div>
-        </>
-      )}
+        </div>
+      </Modal>
     </div>
   )
 }

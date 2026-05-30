@@ -1,0 +1,49 @@
+.ui-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  margin-bottom: var(--s-3);
+}
+
+.ui-field__label {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--c-text-2);
+}
+
+.ui-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 14px;
+  border: 1.5px solid var(--c-border);
+  border-radius: var(--r-md);
+  font-family: var(--font-sans);
+  font-size: var(--fs-md);
+  color: var(--c-text);
+  background: var(--c-surface);
+  transition: border-color var(--dur) ease, box-shadow var(--dur) ease;
+}
+
+.ui-input::placeholder {
+  color: var(--c-text-3);
+}
+
+.ui-input:focus {
+  outline: none;
+  border-color: var(--c-green);
+  box-shadow: 0 0 0 3px var(--c-green-50);
+}
+
+.ui-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2398a39b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 38px;
+}
+
+.ui-field__error {
+  font-size: var(--fs-xs);
+  color: var(--c-danger);
+}
