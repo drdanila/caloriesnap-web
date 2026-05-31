@@ -4,6 +4,8 @@ import { Meal } from '../services/mealService'
 import { ResultCard } from '../components/ResultCard'
 import { Badge, Button, Card, EmptyState, IconButton, Modal } from '../ui'
 import { useT } from '../i18n/I18nProvider'
+import { pluralMeals } from '../i18n/plural'
+import { confidenceBand, formatCalories, isLowConfidence } from '../lib/nutrition'
 import './HistoryScreen.css'
 
 export default function HistoryScreen({
@@ -37,9 +39,6 @@ export default function HistoryScreen({
     )
   }
 
-  const confidenceColor = (c: number) =>
-    c >= 80 ? 'var(--c-success)' : c >= 60 ? 'var(--c-warning)' : 'var(--c-danger)'
-
   return (
     <div className="history-screen">
       <div className="date-nav">
@@ -65,7 +64,7 @@ export default function HistoryScreen({
 
       <div className="day-summary">
         <span>{dayCalories} {t('kcal')}</span>
-        <span>{t('history_meals', { count: dayMeals.length })}</span>
+        <span>{t('history_meals', { count: dayMeals.length, meals: pluralMeals(dayMeals.length, lang) })}</span>
       </div>
 
       <div className="meals-list">
@@ -91,7 +90,7 @@ export default function HistoryScreen({
                       <span className="meal-thumb__emoji">🍽️</span>
                     )}
                   </div>
-                  <Badge tone="mint">{meal.calories}</Badge>
+                  <Badge tone="mint">{formatCalories(meal)}</Badge>
                 </div>
 
                 <div className="meal-item__body">
@@ -102,10 +101,13 @@ export default function HistoryScreen({
                   <p className="meal-item__macros">
                     {t('protein')[0]} {meal.protein} · {t('fat')[0]} {meal.fat} · {t('carbs')[0]} {meal.carbs} {t('unit_g')}
                   </p>
+                  {isLowConfidence(meal) && (
+                    <Badge tone="warning" className="meal-item__flag">⚠️ {t('conf_low')}</Badge>
+                  )}
                   <div className="confidence-bar">
                     <div
                       className="confidence-fill"
-                      style={{ width: `${meal.confidence}%`, background: confidenceColor(meal.confidence) }}
+                      style={{ width: `${meal.confidence}%`, background: confidenceBand(meal.confidence).color }}
                     />
                   </div>
                 </div>

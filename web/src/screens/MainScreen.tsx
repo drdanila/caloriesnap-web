@@ -13,6 +13,7 @@ import { ResultCard } from '../components/ResultCard'
 import { Toast } from '../components/Toast'
 import { Button, IconButton, Card, ProgressBar, ProgressRing, BottomNav, LoadingOverlay, LanguageToggle } from '../ui'
 import { useT } from '../i18n/I18nProvider'
+import { pluralMeals } from '../i18n/plural'
 import './MainScreen.css'
 
 const HistoryScreen = lazy(() => import('./HistoryScreen'))
@@ -88,6 +89,22 @@ export default function MainScreen({ user }: { user: User }) {
     if (file) handleImageSelect(file)
   }
 
+  // Opens the device camera; reused by the "Take photo" button and the low-confidence "Retake".
+  const openCamera = () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = 'image/*'
+    input.capture = 'environment'
+    input.onchange = (e: any) => handleFileChange(e)
+    input.click()
+  }
+
+  const closeResult = () => {
+    setResult(null)
+    setPreviewUrl(null)
+    setCurrentFile(null)
+  }
+
   const handleSignOut = async () => {
     try {
       await signOut()
@@ -158,7 +175,7 @@ export default function MainScreen({ user }: { user: User }) {
               value={targets.calories > 0 ? totals.calories / targets.calories : 0}
               exceeded={caloriesExceeded}
             />
-            <p className="cal-card__meals">{t('mealsToday', { count: todayMeals.length })}</p>
+            <p className="cal-card__meals">{t('mealsToday', { count: todayMeals.length, meals: pluralMeals(todayMeals.length, lang) })}</p>
           </Card>
 
           <Card className="macro-card">
@@ -183,14 +200,7 @@ export default function MainScreen({ user }: { user: User }) {
               size="lg"
               leftIcon={<Camera size={20} />}
               disabled={analyzing}
-              onClick={() => {
-                const input = document.createElement('input')
-                input.type = 'file'
-                input.accept = 'image/*'
-                input.capture = 'environment'
-                input.onchange = (e: any) => handleFileChange(e)
-                input.click()
-              }}
+              onClick={openCamera}
             >
               {t('takePhoto')}
             </Button>
@@ -240,10 +250,10 @@ export default function MainScreen({ user }: { user: User }) {
         <ResultCard
           result={result}
           imageUrl={previewUrl}
-          onClose={() => {
-            setResult(null)
-            setPreviewUrl(null)
-            setCurrentFile(null)
+          onClose={closeResult}
+          onRetake={() => {
+            closeResult()
+            openCamera()
           }}
         />
       )}

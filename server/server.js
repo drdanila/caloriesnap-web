@@ -66,17 +66,95 @@ app.post('/analyze', async (req, res) => {
 
     const isFood = validationMessage.content[0]?.text?.toLowerCase().includes('yes');
     if (!isFood) {
+      // i18n: the rejection message follows the requested locale.
+      const notFoodMessage = locale === 'en'
+        ? 'Please upload a photo of food or a prepared meal.'
+        : 'Пожалуйста, загрузите фото еды или приготовленного блюда.';
       return res.status(400).json({
         error: 'Not a food image',
-        message: 'Пожалуйста, загрузите фото еды или приготовленного блюда.',
+        message: notFoodMessage,
       });
     }
 
-    // Analyze nutrition
+    // Analyze nutrition.
+    // Evidence-first: report only what is visible; never infer oils/cooking/spices.
+    // Strict structured output is enforced via a forced tool call (input_schema),
+    // not prompt-coaxed JSON — this removes the previous regex-parsing fallback.
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
-      temperature: 0.1,
+      max_tokens: 1500,
+      temperature: 0.1, // low + deterministic; do NOT also set top_p (Anthropic advises one or the other)
+      system: `You are a precise, evidence-first food and nutrition analyst. Your goal: maximize factual accuracy, minimize assumptions, never hallucinate.
+
+REASONING PRIORITY (never reverse this order):
+1. Visible evidence in the image
+2. USDA FoodData Central / standard nutrition databases
+3. Deterministic calculation from known portions
+4. (User profile — not provided here)
+5. Your own interpretation (lowest priority)
+
+WHAT YOU MAY REPORT:
+- Only foods and ingredients that are VISIBLE in the image.
+- Do NOT infer cooking methods. Do NOT infer added oils. Do NOT infer spices. Do NOT infer hidden ingredients.
+- Do NOT use hedging words ("предположительно", "вероятно", "presumably", "likely", "possibly", "maybe") in ANY text field, and never add parenthetical guesses. State ingredients as plain terms (write "Крем", not "Крем (предположительно заварной)"); if unsure, omit the item.
+- Estimate portion size ONLY when your confidence in it is above 80%. Otherwise set portionSize to null (unknown).
+- If you cannot confidently identify a food item (confidence below 50), omit it rather than guessing.
+- Never compensate for a poor-quality image with assumptions — lower confidence instead.
+
+ALLERGENS: you MAY list allergens that are characteristic of the clearly identified dish (e.g. a Napoleon → gluten, milk, eggs) as SHORT single terms with no qualifiers, parentheses, or explanations (e.g. "Глютен", "Молоко", "Яйца"). These are presented to the user as POSSIBLE allergens, so do not hedge inside the term itself.
+
+CONFIDENCE (0-100): 90+ high, 70-89 medium, 50-69 low, below 50 = do not report that item.
+
+CALORIES & MACROS:
+- calories is the single best point estimate. Also provide caloriesMin and caloriesMax.
+- When overall confidence is high (90+), caloriesMin = caloriesMax = calories.
+- When confidence is not high, return a sensible range (e.g. min 420, max 520) reflecting the uncertainty.
+- Round all macros (protein, fat, carbs, fiber) to whole grams.
+- healthScore: 0-100 nutritional quality of the meal based only on visible composition.
+
+IMAGE QUALITY: if the image is blurry, dark, partial, or otherwise hard to read, set imageQuality to "poor" and reduce confidence accordingly. Otherwise "good".
+
+TEXT (be concise — facts over explanations, no storytelling, no motivational text, no recipes, no nutrition lectures):
+- summary: at most ONE short sentence.
+- recommendations: at most 3 short items.
+- warnings: at most 2 short items.
+- recommendations and warnings must be about NUTRITION and HEALTH only. Never give advice about the photo/image, the app, or how to estimate the meal (e.g. do NOT say "remove shells before eating to make portion estimation easier").
+
+LANGUAGE: write every human-readable text field (dishName, portionSize, ingredients, allergens, tags, summary, recommendations, warnings) in ${langName}. Keep mealType, imageQuality, and all numbers as specified regardless of language.
+
+Call the record_meal_analysis tool exactly once with your structured result.`,
+      tools: [
+        {
+          name: 'record_meal_analysis',
+          description: 'Record the structured, evidence-based nutrition analysis of the food image.',
+          input_schema: {
+            type: 'object',
+            properties: {
+              dishName: { type: 'string', description: 'Specific name of the dish based only on what is visible.' },
+              calories: { type: 'number', description: 'Best single point estimate of total calories (kcal).' },
+              caloriesMin: { type: 'number', description: 'Lower bound of the calorie estimate.' },
+              caloriesMax: { type: 'number', description: 'Upper bound of the calorie estimate.' },
+              protein: { type: 'number', description: 'Protein in whole grams.' },
+              fat: { type: 'number', description: 'Fat in whole grams (only visible/known fats, not inferred oils).' },
+              carbs: { type: 'number', description: 'Carbohydrates in whole grams.' },
+              fiber: { type: 'number', description: 'Fiber in whole grams; 0 if unclear.' },
+              confidence: { type: 'number', description: 'Overall confidence 0-100.' },
+              healthScore: { type: 'number', description: 'Nutritional quality 0-100 from visible composition.' },
+              portionSize: { type: ['string', 'null'], description: 'Measurable portion (e.g. "250g"); null if confidence in portion is not above 80%.' },
+              ingredients: { type: 'array', items: { type: 'string' }, description: 'Visible ingredients only, as plain terms — no hedging words or parenthetical guesses.' },
+              allergens: { type: 'array', items: { type: 'string' }, description: 'Possible allergens characteristic of the identified dish, as short single terms with no qualifiers/parentheses.' },
+              tags: { type: 'array', items: { type: 'string' }, description: 'Short dietary tags (e.g. high-protein, vegetarian).' },
+              mealType: { type: 'string', enum: ['breakfast', 'lunch', 'dinner', 'snack', 'unknown'], description: 'Meal type if evident, else "unknown".' },
+              imageQuality: { type: 'string', enum: ['good', 'poor'], description: 'Quality of the input image.' },
+              summary: { type: 'string', description: 'At most one short sentence describing the visible meal.' },
+              recommendations: { type: 'array', items: { type: 'string' }, description: 'At most 3 short nutrition/health recommendations — never about the photo, the app, or estimation.' },
+              warnings: { type: 'array', items: { type: 'string' }, description: 'At most 2 short nutrition/health warnings — never about the photo, the app, or estimation.' },
+            },
+            required: ['dishName', 'calories', 'protein', 'fat', 'carbs', 'confidence'],
+          },
+        },
+      ],
+      tool_choice: { type: 'tool', name: 'record_meal_analysis' },
       messages: [
         {
           role: 'user',
@@ -91,85 +169,55 @@ app.post('/analyze', async (req, res) => {
             },
             {
               type: 'text',
-              text: `You are a professional nutritionist and food analyst. Analyze this food image with MAXIMUM ACCURACY and provide detailed nutritional information.
-
-IMPORTANT INSTRUCTIONS:
-1. Identify the exact dish/food items visible
-2. Estimate portion size based on visual cues (plate size, utensils, glass size reference)
-3. Calculate calories based on USDA and international food databases
-4. Be as precise as possible with macronutrients
-5. If multiple items, sum up the totals
-6. Consider cooking method visible in the image
-7. Estimate hidden ingredients/oils used in cooking
-
-Return ONLY valid JSON (no markdown, no extra text) with these fields:
-{
-  "dishName": "specific name of the dish (e.g., 'Grilled Salmon with Rice and Vegetables')",
-  "calories": number (total, be as accurate as possible),
-  "protein": number (in grams, consider all ingredients),
-  "fat": number (in grams, include cooking oils),
-  "carbs": number (in grams, all sources),
-  "fiber": number (in grams, estimate from ingredients; if unclear, use 0),
-  "confidence": number (0-100, how confident in accuracy: 100=very clear/standard dish, 50=unclear/mixed items),
-  "portionSize": "specific portion size (e.g., '250g', '1.5 cups', '150ml')",
-  "ingredients": ["ingredient1", "ingredient2", ...],
-  "notes": "any important notes about estimation (e.g., 'sauce not visible', 'oil used estimated')"
-}
-
-Be conservative with estimates - better to slightly overestimate calories.
-
-IMPORTANT: Respond in ${langName}. All text fields (dishName, portionSize, ingredients, notes) must be written in ${langName}.
-
-ACCURACY: Use the USDA FoodData Central database as the reference for calories and macros. Your estimates must be reproducible — analyzing the same dish multiple times should not differ by more than 5%. Be specific about portion sizes (measurable units, not "medium").`
+              text: 'Analyze this food image and record the result with the record_meal_analysis tool. Report only what is visible.'
             }
           ],
         }
       ],
     });
 
-    const textContent = message.content.find(block => block.type === 'text');
-    if (!textContent) {
-      console.error('No text content in Claude response');
-      return res.status(500).json({ error: 'No text response from Claude' });
+    const toolUse = message.content.find(block => block.type === 'tool_use' && block.name === 'record_meal_analysis');
+    if (!toolUse) {
+      console.error('No tool_use block in Claude response', JSON.stringify(message.content));
+      return res.status(500).json({ error: 'No structured analysis from Claude' });
     }
 
-    console.log('Claude response text:', textContent.text);
+    const nutritionData = { ...toolUse.input };
+    console.log('Structured nutrition data:', nutritionData);
 
-    let nutritionData;
-    try {
-      let jsonText = textContent.text.trim();
-
-      // Extract JSON from markdown code block if present
-      const jsonMatch = jsonText.match(/```(?:json)?\n?([\s\S]*?)\n?```/);
-      if (jsonMatch) {
-        jsonText = jsonMatch[1].trim();
-      }
-
-      // Also try to extract JSON object directly if no markdown
-      if (!jsonMatch) {
-        const objectMatch = jsonText.match(/\{[\s\S]*\}/);
-        if (objectMatch) {
-          jsonText = objectMatch[0];
-        }
-      }
-
-      console.log('Extracted JSON text:', jsonText.substring(0, 200));
-      nutritionData = JSON.parse(jsonText);
-    } catch (e) {
-      console.error('JSON parse error:', e.message);
-      console.error('Attempted to parse:', textContent.text.substring(0, 500));
-      return res.status(500).json({ error: 'Failed to parse nutrition data', details: e.message });
-    }
-
-    console.log('Successfully parsed nutrition data:', nutritionData);
-
-    // Normalize nutrition data - ensure all fields are present and valid
+    // Normalize - ensure all fields are present, valid, and within bounds.
     nutritionData.fiber = Math.max(0, nutritionData.fiber || 0);
     nutritionData.protein = Math.max(0, nutritionData.protein || 0);
     nutritionData.fat = Math.max(0, nutritionData.fat || 0);
     nutritionData.carbs = Math.max(0, nutritionData.carbs || 0);
     nutritionData.calories = Math.max(0, nutritionData.calories || 0);
-    nutritionData.confidence = Math.min(100, Math.max(0, nutritionData.confidence || 50));
+    nutritionData.confidence = Math.min(100, Math.max(0, nutritionData.confidence ?? 50));
+
+    // Calorie range: default to the point value, then enforce min <= calories <= max.
+    const cMin = Math.max(0, nutritionData.caloriesMin ?? nutritionData.calories);
+    const cMax = Math.max(0, nutritionData.caloriesMax ?? nutritionData.calories);
+    nutritionData.caloriesMin = Math.min(cMin, nutritionData.calories);
+    nutritionData.caloriesMax = Math.max(cMax, nutritionData.calories);
+
+    nutritionData.healthScore = nutritionData.healthScore == null
+      ? undefined
+      : Math.min(100, Math.max(0, nutritionData.healthScore));
+
+    // Arrays default to []; text caps enforced defensively (1 summary / 3 recs / 2 warnings).
+    nutritionData.ingredients = Array.isArray(nutritionData.ingredients) ? nutritionData.ingredients : [];
+    nutritionData.allergens = Array.isArray(nutritionData.allergens) ? nutritionData.allergens : [];
+    nutritionData.tags = Array.isArray(nutritionData.tags) ? nutritionData.tags : [];
+    nutritionData.recommendations = Array.isArray(nutritionData.recommendations) ? nutritionData.recommendations.slice(0, 3) : [];
+    nutritionData.warnings = Array.isArray(nutritionData.warnings) ? nutritionData.warnings.slice(0, 2) : [];
+
+    const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack', 'unknown'];
+    nutritionData.mealType = MEAL_TYPES.includes(nutritionData.mealType) ? nutritionData.mealType : 'unknown';
+    nutritionData.imageQuality = nutritionData.imageQuality === 'poor' ? 'poor' : 'good';
+
+    // Unknown portion -> null (UI localizes the "unknown" label).
+    if (!nutritionData.portionSize || typeof nutritionData.portionSize !== 'string' || !nutritionData.portionSize.trim()) {
+      nutritionData.portionSize = null;
+    }
 
     // Upload image to Firebase Storage
     let imageUrl;

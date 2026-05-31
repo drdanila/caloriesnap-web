@@ -67,6 +67,12 @@
   flex-shrink: 0;
 }
 
+/* Calorie badge under the thumb may now hold a range ("170–260") — keep it on one line. */
+.meal-item__media .ui-badge {
+  white-space: nowrap;
+  font-size: var(--fs-xs);
+}
+
 .meal-thumb {
   width: 60px;
   height: 60px;
@@ -123,6 +129,12 @@
   margin: 2px 0 var(--s-2);
   font-size: var(--fs-xs);
   color: var(--c-text-3);
+}
+
+.meal-item__flag {
+  display: inline-flex;
+  margin-bottom: var(--s-2);
+  font-size: var(--fs-xs);
 }
 
 .confidence-bar {
