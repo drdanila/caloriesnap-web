@@ -29,7 +29,10 @@ Monorepo with two independent packages plus Firebase config at the root.
   portion below 80% confidence, poor-image → lower confidence, and concise text
   (≤1 summary / ≤3 recommendations / ≤2 warnings). Uses `@anthropic-ai/sdk`;
   needs `ANTHROPIC_API_KEY`. Low-confidence/poor-image results are **flagged, not
-  blocked** — they still save.
+  blocked** — they still save. The tool output is run through the pure
+  `server/lib/normalizeAnalysis.js` (`normalizeAnalysis`) before persisting —
+  clamps/coerces every field that reaches the prod `meals` collection — and is
+  unit-tested via Vitest (`server/normalizeAnalysis.test.js`, `npm test` in `server/`).
 - **Database** — Firestore. **AI** — Anthropic Claude (server-side only).
   **Auth** — Firebase Google Sign-In.
 
@@ -37,7 +40,9 @@ Monorepo with two independent packages plus Firebase config at the root.
 
 - `screens/` — `LoginScreen`, `MainScreen`, `HistoryScreen`, `ProfileScreen`.
 - `services/` — `authService`, `mealService`, `profileService` (all business
-  logic lives here; see Rule 5/6).
+  logic lives here; see Rule 5/6). `profileService.calculateTargets` (locked
+  formula) and `mealService.mapMealDoc` (pure doc→Meal mapper) are unit-tested
+  (`*.test.ts` beside each service).
 - `ui/` — ~28 design-system primitives (Button, Card, Modal, Badge, FormField,
   SegmentedControl, ProgressRing/Bar, Stat, BottomNav, LanguageToggle, …) with
   `.stories.tsx` and a single `index.ts` barrel.
@@ -103,9 +108,10 @@ collections (separate `create` check on `meals` against `request.resource`).
 ## Known issues / technical debt
 
 Authoritative, living backlog: **[TECH_DEBT.md](TECH_DEBT.md)** (reviewed every
-session). At a glance: type-based (not feature-based) folder structure; automated
-tests still thin (Vitest now covers `lib/nutrition.ts` only); missing rule-mandated
-docs; Firebase SDK on v9; server `/analyze` normalization untested.
+session). At a glance: type-based (not feature-based) folder structure; missing
+rule-mandated docs; Firebase SDK on v9. Test coverage grew — Vitest now covers
+`lib/nutrition.ts`, `calculateTargets`, `mapMealDoc` (web) and the server's
+`normalizeAnalysis` (TD-02 + TD-05 closed), all run as CI gates.
 
 ## Environment configuration
 
@@ -117,8 +123,9 @@ Cloud Run service), mapped in `.firebaserc`:
 | **prod** | `eatappmain-e7503` | merge to `main` |
 | **staging** | `caloriesnap-staging` | open/update a PR |
 
-CI/CD: `.github/workflows/deploy.yml` builds the frontend with the env's Firebase
-config, deploys Hosting + Firestore/Storage rules, and builds/pushes/deploys the
-Cloud Run server image. Per-env secrets live in GitHub Environments
+CI/CD: `.github/workflows/deploy.yml` runs tests as deploy gates (web `npm test`
+in the lint job; a `server-test` job gating `server-deploy`), builds the frontend
+with the env's Firebase config, deploys Hosting + Firestore/Storage rules, and
+builds/pushes/deploys the Cloud Run server image. Per-env secrets live in GitHub Environments
 (`production` / `staging`). Frontend config via `VITE_FIREBASE_*` and `VITE_API_URL`;
 server needs `ANTHROPIC_API_KEY` and `STORAGE_BUCKET`. **No secrets are hardcoded.**

@@ -29,6 +29,7 @@
 - Typed inputs/outputs; avoid `any`. Every feature handles loading / empty / error / success states.
 - Log important operations (auth, onboarding, nutrition calc, API failures).
 - Final report after a major task: summary, changed files, architecture impact, risks, manual test steps, future improvements.
+- **Record big developments in [CHANGELOG.md](CHANGELOG.md).** After any sizeable task, add a bullet under **[Unreleased]**; rename it to a version + date when the work merges to `main`.
 
 ## Features (today)
 - Photo / gallery → AI nutrition analysis (server `/analyze`).

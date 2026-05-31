@@ -2,6 +2,7 @@ const express = require('express');
 const Anthropic = require('@anthropic-ai/sdk');
 const admin = require('firebase-admin');
 const crypto = require('crypto');
+const { normalizeAnalysis } = require('./lib/normalizeAnalysis');
 
 const app = express();
 app.use(express.json({ limit: '40mb' }));
@@ -182,42 +183,10 @@ Call the record_meal_analysis tool exactly once with your structured result.`,
       return res.status(500).json({ error: 'No structured analysis from Claude' });
     }
 
-    const nutritionData = { ...toolUse.input };
-    console.log('Structured nutrition data:', nutritionData);
-
     // Normalize - ensure all fields are present, valid, and within bounds.
-    nutritionData.fiber = Math.max(0, nutritionData.fiber || 0);
-    nutritionData.protein = Math.max(0, nutritionData.protein || 0);
-    nutritionData.fat = Math.max(0, nutritionData.fat || 0);
-    nutritionData.carbs = Math.max(0, nutritionData.carbs || 0);
-    nutritionData.calories = Math.max(0, nutritionData.calories || 0);
-    nutritionData.confidence = Math.min(100, Math.max(0, nutritionData.confidence ?? 50));
-
-    // Calorie range: default to the point value, then enforce min <= calories <= max.
-    const cMin = Math.max(0, nutritionData.caloriesMin ?? nutritionData.calories);
-    const cMax = Math.max(0, nutritionData.caloriesMax ?? nutritionData.calories);
-    nutritionData.caloriesMin = Math.min(cMin, nutritionData.calories);
-    nutritionData.caloriesMax = Math.max(cMax, nutritionData.calories);
-
-    nutritionData.healthScore = nutritionData.healthScore == null
-      ? undefined
-      : Math.min(100, Math.max(0, nutritionData.healthScore));
-
-    // Arrays default to []; text caps enforced defensively (1 summary / 3 recs / 2 warnings).
-    nutritionData.ingredients = Array.isArray(nutritionData.ingredients) ? nutritionData.ingredients : [];
-    nutritionData.allergens = Array.isArray(nutritionData.allergens) ? nutritionData.allergens : [];
-    nutritionData.tags = Array.isArray(nutritionData.tags) ? nutritionData.tags : [];
-    nutritionData.recommendations = Array.isArray(nutritionData.recommendations) ? nutritionData.recommendations.slice(0, 3) : [];
-    nutritionData.warnings = Array.isArray(nutritionData.warnings) ? nutritionData.warnings.slice(0, 2) : [];
-
-    const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack', 'unknown'];
-    nutritionData.mealType = MEAL_TYPES.includes(nutritionData.mealType) ? nutritionData.mealType : 'unknown';
-    nutritionData.imageQuality = nutritionData.imageQuality === 'poor' ? 'poor' : 'good';
-
-    // Unknown portion -> null (UI localizes the "unknown" label).
-    if (!nutritionData.portionSize || typeof nutritionData.portionSize !== 'string' || !nutritionData.portionSize.trim()) {
-      nutritionData.portionSize = null;
-    }
+    // Pure, unit-tested in lib/normalizeAnalysis.test.js (guards prod `meals` writes).
+    const nutritionData = normalizeAnalysis(toolUse.input);
+    console.log('Structured nutrition data:', nutritionData);
 
     // Upload image to Firebase Storage
     let imageUrl;
