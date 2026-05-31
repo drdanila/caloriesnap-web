@@ -18,6 +18,10 @@ entry is "released" once it has merged to `main`.
 
 ## [Unreleased]
 
+_Nothing yet._
+
+## [1.0.1] – 2026-05-31 — Testing & CI hardening
+
 ### Quality — Testing & CI
 - **Service & server logic now unit-tested** (closes TD-02 + TD-05):
   - `web`: `profileService.calculateTargets` (locked Mifflin–St Jeor — BMR ±offset,
