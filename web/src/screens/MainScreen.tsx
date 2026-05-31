@@ -88,6 +88,22 @@ export default function MainScreen({ user }: { user: User }) {
     if (file) handleImageSelect(file)
   }
 
+  // Opens the device camera; reused by the "Take photo" button and the low-confidence "Retake".
+  const openCamera = () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = 'image/*'
+    input.capture = 'environment'
+    input.onchange = (e: any) => handleFileChange(e)
+    input.click()
+  }
+
+  const closeResult = () => {
+    setResult(null)
+    setPreviewUrl(null)
+    setCurrentFile(null)
+  }
+
   const handleSignOut = async () => {
     try {
       await signOut()
@@ -183,14 +199,7 @@ export default function MainScreen({ user }: { user: User }) {
               size="lg"
               leftIcon={<Camera size={20} />}
               disabled={analyzing}
-              onClick={() => {
-                const input = document.createElement('input')
-                input.type = 'file'
-                input.accept = 'image/*'
-                input.capture = 'environment'
-                input.onchange = (e: any) => handleFileChange(e)
-                input.click()
-              }}
+              onClick={openCamera}
             >
               {t('takePhoto')}
             </Button>
@@ -240,10 +249,10 @@ export default function MainScreen({ user }: { user: User }) {
         <ResultCard
           result={result}
           imageUrl={previewUrl}
-          onClose={() => {
-            setResult(null)
-            setPreviewUrl(null)
-            setCurrentFile(null)
+          onClose={closeResult}
+          onRetake={() => {
+            closeResult()
+            openCamera()
           }}
         />
       )}

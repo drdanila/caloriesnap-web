@@ -2,7 +2,7 @@
 
 > Primary context source for future AI sessions (per
 > [AI_DEVELOPMENT_RULES.md](AI_DEVELOPMENT_RULES.md)).
-> Keep ≤1000 words and in sync with the implementation. Last updated: 2026-05-30.
+> Keep ≤1000 words and in sync with the implementation. Last updated: 2026-05-31.
 >
 > **Related docs:** [CLAUDE.md](CLAUDE.md) (session entrypoint: rules/practices/features) ·
 > [TECH_DEBT.md](TECH_DEBT.md) (debt backlog) · [README.md](README.md) (human setup/deploy).
@@ -19,10 +19,17 @@ Monorepo with two independent packages plus Firebase config at the root.
 - **`web/`** — Frontend. React 19 + TypeScript + Vite, shipped as a PWA to
   **Firebase Hosting**. Deps are intentionally minimal: `firebase` v9,
   `lucide-react`, `react`/`react-dom`. Storybook documents the UI primitives.
-- **`server/`** — Backend. A single Express app (`server/server.js`, ~216 lines)
+- **`server/`** — Backend. A single Express app (`server/server.js`)
   on **Google Cloud Run**. Exposes `POST /analyze`, which makes two
   `claude-sonnet-4-6` calls: (1) validate the image is food, (2) return
-  structured nutrition. Uses `@anthropic-ai/sdk`; needs `ANTHROPIC_API_KEY`.
+  **evidence-first** structured nutrition via a **forced tool call**
+  (`record_meal_analysis` `input_schema` — no more regex JSON parsing). A system
+  prompt enforces the AI-config spec: report only what's visible (no inferred
+  oils/cooking/spices), calorie **range** when confidence isn't high, `"unknown"`
+  portion below 80% confidence, poor-image → lower confidence, and concise text
+  (≤1 summary / ≤3 recommendations / ≤2 warnings). Uses `@anthropic-ai/sdk`;
+  needs `ANTHROPIC_API_KEY`. Low-confidence/poor-image results are **flagged, not
+  blocked** — they still save.
 - **Database** — Firestore. **AI** — Anthropic Claude (server-side only).
   **Auth** — Firebase Google Sign-In.
 
@@ -35,6 +42,9 @@ Monorepo with two independent packages plus Firebase config at the root.
   SegmentedControl, ProgressRing/Bar, Stat, BottomNav, LanguageToggle, …) with
   `.stories.tsx` and a single `index.ts` barrel.
 - `components/` — app-specific composites (`ResultCard`, `Toast`, `InstallBanner`).
+- `lib/` — pure presentation helpers (`nutrition.ts`: `confidenceBand`,
+  `formatCalories`, `isLowConfidence`, `hasPortion`) shared by `ResultCard` +
+  `HistoryScreen`. Covered by Vitest (`nutrition.test.ts`, run with `npm test`).
 - `i18n/` — `I18nProvider` + `dictionaries.ts` (RU/EN, English default).
 - `config/firebase.ts` — Firebase init. `styles/tokens.css` — design tokens.
 - `hooks/useInstallPrompt.ts` — PWA install. `main.tsx` / `App.tsx` — entry/root.
@@ -58,9 +68,14 @@ Monorepo with two independent packages plus Firebase config at the root.
 
 ## Data model (Firestore)
 
-- **`meals/{mealId}`** — `userId`, `dishName`, `calories`, `protein`, `fat`,
-  `carbs`, `fiber?`, `confidence`, `portionSize`, `ingredients?`, `notes?`,
-  `imageUrl?`, `createdAt`. Owner-only access (rule keys off `userId`).
+- **`meals/{mealId}`** — `userId`, `dishName`, `calories` (canonical point value
+  = totals anchor), `caloriesMin?`/`caloriesMax?`, `protein`, `fat`, `carbs`,
+  `fiber?`, `confidence`, `healthScore?`, `portionSize` (string|null when
+  unknown), `ingredients?`, `allergens?`, `tags?`, `mealType?`
+  (breakfast|lunch|dinner|snack|unknown), `imageQuality?` (good|poor), `summary?`,
+  `recommendations?`, `warnings?`, `notes?` (legacy), `imageUrl?`, `createdAt`.
+  All analysis fields beyond the originals are **optional/additive** (old docs
+  stay valid; no migration). Owner-only access (rule keys off `userId`).
 - **`userProfiles/{userId}`** — `userId`, `heightCm`, `weightKg`,
   `targetWeightKg`, `age`, `gender`(male|female), `activityLevel`, `updatedAt`.
   Doc id **is** the uid; owner-only access.
@@ -70,7 +85,10 @@ collections (separate `create` check on `meals` against `request.resource`).
 
 ## Completed features
 
-- Photograph / pick a meal → AI nutrition analysis (server `/analyze`).
+- Photograph / pick a meal → **evidence-first** AI nutrition analysis (server
+  `/analyze`): calorie ranges + confidence bands, health score, allergens, tags,
+  meal type, and concise summary/recommendations/warnings; low-confidence meals
+  are flagged with a retake prompt but still saved.
 - Personalized daily calorie + macro targets from the user profile.
 - Meal history with stats; meal delete.
 - Google Sign-In (popup desktop / redirect standalone-PWA).
@@ -85,8 +103,9 @@ collections (separate `create` check on `meals` against `request.resource`).
 ## Known issues / technical debt
 
 Authoritative, living backlog: **[TECH_DEBT.md](TECH_DEBT.md)** (reviewed every
-session). At a glance: type-based (not feature-based) folder structure, no
-automated tests, missing rule-mandated docs, Firebase SDK on v9.
+session). At a glance: type-based (not feature-based) folder structure; automated
+tests still thin (Vitest now covers `lib/nutrition.ts` only); missing rule-mandated
+docs; Firebase SDK on v9; server `/analyze` normalization untested.
 
 ## Environment configuration
 

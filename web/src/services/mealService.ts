@@ -13,18 +13,35 @@ import {
   deleteDoc
 } from 'firebase/firestore'
 
+export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'unknown'
+
 export interface Meal {
   id: string
   userId: string
   dishName: string
   calories: number
+  /** Lower/upper bounds of the calorie estimate. Equal to `calories` when confidence is high. */
+  caloriesMin?: number
+  caloriesMax?: number
   protein: number
   fat: number
   carbs: number
   fiber?: number
   confidence: number
-  portionSize: string
+  /** Nutritional quality 0-100 from visible composition. */
+  healthScore?: number
+  /** Measurable portion (e.g. "250g"); null/empty when the model is not confident enough. */
+  portionSize: string | null
   ingredients?: string[]
+  allergens?: string[]
+  tags?: string[]
+  mealType?: MealType
+  imageQuality?: 'good' | 'poor'
+  /** Concise model output: ≤1 summary sentence, ≤3 recommendations, ≤2 warnings. */
+  summary?: string
+  recommendations?: string[]
+  warnings?: string[]
+  /** Legacy free-form note from the old analyzer; kept for back-compat display only. */
   notes?: string
   imageUrl?: string
   createdAt: Date
