@@ -5,7 +5,7 @@ import { ResultCard } from '../components/ResultCard'
 import { Badge, Button, Card, EmptyState, IconButton, Modal } from '../ui'
 import { useT } from '../i18n/I18nProvider'
 import { pluralMeals } from '../i18n/plural'
-import { confidenceBand, isLowConfidence } from '../lib/nutrition'
+import { confidenceBand, formatCalories, isLowConfidence } from '../lib/nutrition'
 import './HistoryScreen.css'
 
 export default function HistoryScreen({
@@ -90,7 +90,7 @@ export default function HistoryScreen({
                       <span className="meal-thumb__emoji">🍽️</span>
                     )}
                   </div>
-                  <Badge tone="mint">{meal.calories}</Badge>
+                  <Badge tone="mint">{formatCalories(meal)}</Badge>
                 </div>
 
                 <div className="meal-item__body">

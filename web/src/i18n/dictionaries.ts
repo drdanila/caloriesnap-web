@@ -46,7 +46,7 @@ export const ru = {
   kcal: 'ккал',
 
   healthScore: 'Оценка пользы',
-  allergens: 'Аллергены',
+  allergens: 'Возможные аллергены',
   tags: 'Теги',
   recommendations: 'Рекомендации',
   warnings: 'Предупреждения',
@@ -144,7 +144,7 @@ export const en: Record<TKey, string> = {
   kcal: 'kcal',
 
   healthScore: 'Health score',
-  allergens: 'Allergens',
+  allergens: 'Possible allergens',
   tags: 'Tags',
   recommendations: 'Recommendations',
   warnings: 'Warnings',

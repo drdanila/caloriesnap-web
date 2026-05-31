@@ -96,9 +96,12 @@ REASONING PRIORITY (never reverse this order):
 WHAT YOU MAY REPORT:
 - Only foods and ingredients that are VISIBLE in the image.
 - Do NOT infer cooking methods. Do NOT infer added oils. Do NOT infer spices. Do NOT infer hidden ingredients.
+- Do NOT use hedging words ("предположительно", "вероятно", "presumably", "likely", "possibly", "maybe") in ANY text field, and never add parenthetical guesses. State ingredients as plain terms (write "Крем", not "Крем (предположительно заварной)"); if unsure, omit the item.
 - Estimate portion size ONLY when your confidence in it is above 80%. Otherwise set portionSize to null (unknown).
 - If you cannot confidently identify a food item (confidence below 50), omit it rather than guessing.
 - Never compensate for a poor-quality image with assumptions — lower confidence instead.
+
+ALLERGENS: you MAY list allergens that are characteristic of the clearly identified dish (e.g. a Napoleon → gluten, milk, eggs) as SHORT single terms with no qualifiers, parentheses, or explanations (e.g. "Глютен", "Молоко", "Яйца"). These are presented to the user as POSSIBLE allergens, so do not hedge inside the term itself.
 
 CONFIDENCE (0-100): 90+ high, 70-89 medium, 50-69 low, below 50 = do not report that item.
 
@@ -115,6 +118,7 @@ TEXT (be concise — facts over explanations, no storytelling, no motivational t
 - summary: at most ONE short sentence.
 - recommendations: at most 3 short items.
 - warnings: at most 2 short items.
+- recommendations and warnings must be about NUTRITION and HEALTH only. Never give advice about the photo/image, the app, or how to estimate the meal (e.g. do NOT say "remove shells before eating to make portion estimation easier").
 
 LANGUAGE: write every human-readable text field (dishName, portionSize, ingredients, allergens, tags, summary, recommendations, warnings) in ${langName}. Keep mealType, imageQuality, and all numbers as specified regardless of language.
 
@@ -137,14 +141,14 @@ Call the record_meal_analysis tool exactly once with your structured result.`,
               confidence: { type: 'number', description: 'Overall confidence 0-100.' },
               healthScore: { type: 'number', description: 'Nutritional quality 0-100 from visible composition.' },
               portionSize: { type: ['string', 'null'], description: 'Measurable portion (e.g. "250g"); null if confidence in portion is not above 80%.' },
-              ingredients: { type: 'array', items: { type: 'string' }, description: 'Visible ingredients only.' },
-              allergens: { type: 'array', items: { type: 'string' }, description: 'Allergens evident from visible ingredients only.' },
+              ingredients: { type: 'array', items: { type: 'string' }, description: 'Visible ingredients only, as plain terms — no hedging words or parenthetical guesses.' },
+              allergens: { type: 'array', items: { type: 'string' }, description: 'Possible allergens characteristic of the identified dish, as short single terms with no qualifiers/parentheses.' },
               tags: { type: 'array', items: { type: 'string' }, description: 'Short dietary tags (e.g. high-protein, vegetarian).' },
               mealType: { type: 'string', enum: ['breakfast', 'lunch', 'dinner', 'snack', 'unknown'], description: 'Meal type if evident, else "unknown".' },
               imageQuality: { type: 'string', enum: ['good', 'poor'], description: 'Quality of the input image.' },
-              summary: { type: 'string', description: 'At most one short sentence.' },
-              recommendations: { type: 'array', items: { type: 'string' }, description: 'At most 3 short recommendations.' },
-              warnings: { type: 'array', items: { type: 'string' }, description: 'At most 2 short warnings.' },
+              summary: { type: 'string', description: 'At most one short sentence describing the visible meal.' },
+              recommendations: { type: 'array', items: { type: 'string' }, description: 'At most 3 short nutrition/health recommendations — never about the photo, the app, or estimation.' },
+              warnings: { type: 'array', items: { type: 'string' }, description: 'At most 2 short nutrition/health warnings — never about the photo, the app, or estimation.' },
             },
             required: ['dishName', 'calories', 'protein', 'fat', 'carbs', 'confidence'],
           },
