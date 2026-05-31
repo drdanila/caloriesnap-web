@@ -33,8 +33,30 @@ jobs:
         run: npm ci
       - name: TypeScript Check
         run: npm run build -- --noEmit 2>/dev/null || tsc --noEmit
+      - name: Run web tests
+        run: npm test
       - name: Check for lint issues (if eslint exists)
         run: npm list eslint >/dev/null 2>&1 && npm run lint || echo "eslint not configured"
+
+  server-test:
+    runs-on: ubuntu-latest
+    name: Server Tests
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: server/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Run server tests
+        run: npm test
 
   frontend-deploy:
     needs: [lint]
@@ -84,7 +106,7 @@ jobs:
         run: npx firebase-tools deploy --force --project ${{ vars.FIREBASE_PROJECT }} --only hosting --config firebase.alias.json
 
   server-deploy:
-    needs: [lint]
+    needs: [lint, server-test]
     runs-on: ubuntu-latest
     name: Deploy Server
     timeout-minutes: 20

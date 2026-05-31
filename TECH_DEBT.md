@@ -38,8 +38,8 @@
 - **Why it's debt:** Deterministic business logic (esp. `profileService.calculateTargets`) and Firestore-touching services can regress silently.
 - **Trigger to address:** Before adding non-trivial logic to a service, or before changing the nutrition formula. Start with unit tests for `calculateTargets` (pure, easy to cover) and `mealService` mapping.
 - **Priority:** med
-- **Status:** Open
-- **Log:** 2026-05-30 created. 2026-05-31 **partially addressed** — added Vitest (`npm test`) + 11 unit tests for the new `web/src/lib/nutrition.ts` presentation helpers (`confidenceBand`, `formatCalories`, `isLowConfidence`, `hasPortion`). Still untested: `calculateTargets`, `mealService` mapping, and the server `/analyze` normalization caps → keep Open.
+- **Status:** Done
+- **Log:** 2026-05-30 created. 2026-05-31 **partially addressed** — added Vitest (`npm test`) + 11 unit tests for the new `web/src/lib/nutrition.ts` presentation helpers (`confidenceBand`, `formatCalories`, `isLowConfidence`, `hasPortion`). Still untested: `calculateTargets`, `mealService` mapping, and the server `/analyze` normalization caps → keep Open. 2026-05-31 **closed** — added `web/src/services/profileService.test.ts` (locked Mifflin–St Jeor: BMR ±offset, all 5 activity multipliers, −500/+400 goal correction + boundaries, 1200 floor, macro formulas, carbs≥0 invariant) and `web/src/services/mealService.test.ts` for the extracted pure `mapMealDoc` (Timestamp→Date, missing-`createdAt` fallback, id override, passthrough). Server normalization covered under TD-05. Web tests now also run as a CI gate (`deploy.yml` lint job).
 
 ### TD-03: Missing rule-mandated docs
 - **What:** `AI_DEVELOPMENT_RULES.md` expects `ARCHITECTURE.md`, `DATA_MODEL.md`, `DEPLOYMENT.md`, `NUTRITION_LOGIC.md`; only `README.md` + `PROJECT_CONTEXT.md` exist.
@@ -62,5 +62,5 @@
 - **Why it's debt:** This logic guards what gets written to the prod `meals` collection; a regression could persist malformed data for real users.
 - **Trigger to address:** When extracting the normalization into a pure function, or next time the schema changes. Extract `normalizeAnalysis(input)` and unit-test it (Vitest now exists in `web/`; mirror it in `server/`).
 - **Priority:** med
-- **Status:** Open
-- **Log:** 2026-05-31 created (during the AI-analysis upgrade; deferred extracting/testing to keep the diff focused).
+- **Status:** Done
+- **Log:** 2026-05-31 created (during the AI-analysis upgrade; deferred extracting/testing to keep the diff focused). 2026-05-31 **closed** — extracted the normalization block into pure `server/lib/normalizeAnalysis.js` (`normalizeAnalysis(input)`, no I/O, no mutation); `server.js` now calls it. Added a Vitest runner to `server/` (`npm test`) + `server/normalizeAnalysis.test.js` (22 cases: macro/calorie clamps, confidence default/bounds, `min ≤ calories ≤ max`, `healthScore` null→undefined/clamp, array defaults + recs/warnings caps, `mealType`/`imageQuality` coercion, `portionSize`→null, purity). `Dockerfile` updated to `COPY lib ./lib` (prod image previously copied only `server.js`). `server/package-lock.json` regenerated with **npm 10** to keep cross-platform `@rolldown/binding-*` natives (CI `npm ci` gotcha). New `server-test` CI job gates `server-deploy`.

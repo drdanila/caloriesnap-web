@@ -104,6 +104,17 @@ export async function analyzeMealImage(imageFile: File, userId: string, locale: 
   }
 }
 
+// Pure Firestore-doc → Meal mapper. Kept separate from the query so the mapping
+// (notably the createdAt Timestamp→Date conversion + fallback) is unit-testable
+// without a live Firestore connection.
+export function mapMealDoc(id: string, data: DocumentData): Meal {
+  return {
+    ...data,
+    id,
+    createdAt: data.createdAt?.toDate?.() ?? new Date(),
+  } as Meal
+}
+
 export async function fetchUserMeals(userId: string): Promise<Meal[]> {
   const mealsCollection = collection(db, 'meals')
   const q: Query<DocumentData> = query(
@@ -113,11 +124,7 @@ export async function fetchUserMeals(userId: string): Promise<Meal[]> {
   )
 
   const snapshot = await getDocs(q)
-  return snapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data(),
-    createdAt: doc.data().createdAt?.toDate() || new Date()
-  })) as Meal[]
+  return snapshot.docs.map(doc => mapMealDoc(doc.id, doc.data()))
 }
 
 export async function saveMeal(mealData: Omit<Meal, 'id' | 'createdAt'>): Promise<string> {
