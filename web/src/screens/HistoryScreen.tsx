@@ -4,6 +4,7 @@ import { Meal } from '../services/mealService'
 import { ResultCard } from '../components/ResultCard'
 import { Badge, Button, Card, EmptyState, IconButton, Modal } from '../ui'
 import { useT } from '../i18n/I18nProvider'
+import { pluralMeals } from '../i18n/plural'
 import { confidenceBand, isLowConfidence } from '../lib/nutrition'
 import './HistoryScreen.css'
 
@@ -63,7 +64,7 @@ export default function HistoryScreen({
 
       <div className="day-summary">
         <span>{dayCalories} {t('kcal')}</span>
-        <span>{t('history_meals', { count: dayMeals.length })}</span>
+        <span>{t('history_meals', { count: dayMeals.length, meals: pluralMeals(dayMeals.length, lang) })}</span>
       </div>
 
       <div className="meals-list">

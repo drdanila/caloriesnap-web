@@ -63,9 +63,9 @@ export function ResultCard({ result, imageUrl, onClose, onRetake }: ResultCardPr
 
           <div className="result__rows">
             <div className="result__row">🌾 {t('fiber')}: {result.fiber ?? 0}{t('unit_g')}</div>
-            <div className="result__row">
-              📏 {t('portion')}: {hasPortion(result.portionSize) ? result.portionSize : t('unknown')}
-            </div>
+            {hasPortion(result.portionSize) && (
+              <div className="result__row">📏 {t('portion')}: {result.portionSize}</div>
+            )}
             {result.ingredients && result.ingredients.length > 0 && (
               <div className="result__row">
                 <strong>{t('ingredients')}:</strong> {result.ingredients.join(', ')}

@@ -13,6 +13,7 @@ import { ResultCard } from '../components/ResultCard'
 import { Toast } from '../components/Toast'
 import { Button, IconButton, Card, ProgressBar, ProgressRing, BottomNav, LoadingOverlay, LanguageToggle } from '../ui'
 import { useT } from '../i18n/I18nProvider'
+import { pluralMeals } from '../i18n/plural'
 import './MainScreen.css'
 
 const HistoryScreen = lazy(() => import('./HistoryScreen'))
@@ -174,7 +175,7 @@ export default function MainScreen({ user }: { user: User }) {
               value={targets.calories > 0 ? totals.calories / targets.calories : 0}
               exceeded={caloriesExceeded}
             />
-            <p className="cal-card__meals">{t('mealsToday', { count: todayMeals.length })}</p>
+            <p className="cal-card__meals">{t('mealsToday', { count: todayMeals.length, meals: pluralMeals(todayMeals.length, lang) })}</p>
           </Card>
 
           <Card className="macro-card">
